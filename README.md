@@ -21,6 +21,14 @@ git clone https://github.com/AntoineHUET1/Radar_Open_Space_Segmentation.git
 
 Leddar PixSet Dataset is a publicly available dataset containing approximately 29k frames from 97 sequences recorded in high-density urban areas, using a set of various sensors (cameras, LiDARs, radar, IMU, etc.).
 
+![Ledartech.png](Images/Ledartech.png) 
+
+### Download Radar Data
+
+**Direct Download** from this Google Drive link: [Radar Data ](https://drive.google.com/file/d/1J9)
+
+
+
 ### Download Ground Truth Data
 
 **Direct Download** from this google drive link: [Ground Truth Data](https://drive.google.com/file/d/1J9)
@@ -34,11 +42,6 @@ or
 ```bash
 GenerateGroundTruthData.py
 ```
-
-### Download Radar Data
-
-**Direct Download** from this Google Drive link: [Radar Data ](https://drive.google.com/file/d/1J9)
-
 
 ## Data Preparation:
 
