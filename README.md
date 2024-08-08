@@ -37,7 +37,7 @@ GenerateGroundTruthData.py
 
 ### Download Radar Data
 
-**Direct Download** from this google drive link: [Radar Data ](https://drive.google.com/file/d/1J9)
+**Direct Download** from this Google Drive link: [Radar Data ](https://drive.google.com/file/d/1J9)
 
 
 ## Data Preparation:
