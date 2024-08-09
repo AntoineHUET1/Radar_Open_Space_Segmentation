@@ -8,7 +8,7 @@ ROSS is a deep convolutional neural network designed to process raw radar data f
 
 # Table of Contents
 
-1. [Installation](#Installation)
+1. [Installation](#Installation) 
 2. [Dataset](#Dataset)
 3. [Data Preparation](#Data-Preparation)
 
@@ -23,35 +23,33 @@ Leddar PixSet Dataset is a publicly available dataset containing approximately 2
 
 ![Ledartech.png](Images/Ledartech.png) 
 
-### Download Radar Data
+### Download Dataset
 
-**Direct Download** from this Google Drive link: [Radar Data ](https://drive.google.com/file/d/1J9)
+**Direct Download** from this Google Drive link: [Dataset](https://drive.google.com/file/d/13Pai83qq33uq0tttysR4l-IUvQKHGcix/view?usp=sharing)
 
+### [Optional] Manually generate the dataset
 
-
-### Download Ground Truth Data
-
-**Direct Download** from this google drive link: [Ground Truth Data](https://drive.google.com/file/d/1J9)
-
-or 
-
-**Generate Locally** using the following steps:
 1. Download the [Leddar PixSet Dataset](https://dataset.leddartech.com/) from the official website.
 2. Extract the dataset in the root directory of the project in data folder.
+    ```bash
+   cd $PROJECTROOT
+    mkdir -p data
+    ln -s $PIXETDATASET data/Pixet_Dataset
+    ```
 3. Run the following script to generate ground truth data:
-```bash
-GenerateGroundTruthData.py
-```
+    ```bash
+    GenerateGroundTruthData.py
+    ```
 
 ## Data Preparation:
 
-Ounce ground truth and radar data are downloaded and extracted.Create link to data directory.
+Once the dataset is downloaded and extracted, create a symbolic link to the data directory.
 ```bash
 cd $PROJECTROOT
 mkdir -p data
-ln -s $RADARDATA data/RadarData
-ln -s $GROUNDTRUTH data/GroundTruthData
+ln -s $DATASET data/ROSS_Dataset
 ```
+
 
 
 
