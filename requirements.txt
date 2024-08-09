@@ -1,0 +1,8 @@
+numpy
+natsort
+matplotlib
+scikit-learn
+scipy
+opencv-python
+tensorflow
+tqdm

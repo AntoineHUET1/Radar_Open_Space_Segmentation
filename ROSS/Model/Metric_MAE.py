@@ -1,5 +1,4 @@
 import tensorflow as tf
-
 class Metric_MAE(tf.keras.metrics.Metric):
     def __init__(self, Mode=0, Half_length=False, GT_mode=0, name='custom_mae_metric', **kwargs):
         super(Metric_MAE, self).__init__(name=name, **kwargs)

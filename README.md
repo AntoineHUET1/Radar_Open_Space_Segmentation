@@ -17,6 +17,10 @@ ROSS is a deep convolutional neural network designed to process raw radar data f
 ```bash
 git clone https://github.com/AntoineHUET1/Radar_Open_Space_Segmentation.git
 ```
+To install the package, run the following command::
+```bash
+pip install -r requirements.txt
+```
 # Dataset
 
 Leddar PixSet Dataset is a publicly available dataset containing approximately 29k frames from 97 sequences recorded in high-density urban areas, using a set of various sensors (cameras, LiDARs, radar, IMU, etc.).
