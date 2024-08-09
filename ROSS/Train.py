@@ -1,13 +1,12 @@
 import os
 import tensorflow as tf
 from tensorflow import keras
-from utils import create_dataloader, genrerat_Graph
-from Model.Model_ROSS import build_ROSS_32_50
-from Model import Custom_Loss, custom_MAE, custom_MSE, Metric_MAE, Custom_Loss_2, CustomLoss,CustomLoss_binnary_images
+from ROSS.Utils import create_dataloader, genrerat_Graph
+from ROSS.Model import build_ROSS_32_50
+from ROSS.Model import Metric_MAE,CustomLoss
 from time import sleep
 from tqdm import tqdm
 import warnings
-from tensorflow.keras.callbacks import (ReduceLROnPlateau)
 
 
 
@@ -74,7 +73,7 @@ Type_of_Input = ['Radar',' Radar_Frontal','Radar_Bird_view','Radar_Bird_view_RA'
 # ==================== Callbacks ====================
 
 callbacks = [
-        ReduceLROnPlateau(
+    tf.keras.callbacks.ReduceLROnPlateau(
             monitor="val_loss",
             factor=0.1,
             patience=patience,
@@ -154,9 +153,6 @@ if Mode==0:
     loss_func=CustomLoss()
 else:
     loss_func = CustomLoss()
-
-if Binary_Camera:
-    loss_func = CustomLoss_binnary_images()
 
 class CustomFit(keras.Model):
     def __init__(self, model):
@@ -238,20 +234,13 @@ def train_model(units,drop_rate,learning_rate):
     #genrerat_Graph(checkpoint_path, test_dataloader, GT_Output_shape, Type_of_Input,label='Medium',Save_fig=True)
     #genrerat_Graph(checkpoint_path, train_dataloader, GT_Output_shape, Type_of_Input, label='Easy', Save_fig=True)
     #genrerat_Graph(checkpoint_path, val_dataloader, GT_Output_shape, Type_of_Input, label='Hard', Save_fig=True)
-    
-    '''
+
     # Create model
-    if Add_Frontal_images!=0:
-        #print(input_shape,Half_length,Mode,drop_rate)
-        #breakpoint()
-        model =build_ROS_32_50_Concatenate(input_shape=input_shape, Mode=Mode, Dropout=drop_rate,Binary_Camera=Binary_Camera)
-    else:
-        #print(input_shape,Half_length,Mode,drop_rate)
-        
-        #input_shape,Half_length,Mode,drop_rate=(250, 585, 3),True,1,0.2
-        #
-        #breakpoint()
-        model = build_ROS_32_50(input_shape=input_shape, Half_length=Half_length, Mode=Mode, Dropout=drop_rate)
+    #if Add_Frontal_images!=0:
+
+        #model =build_ROS_32_50_Concatenate(input_shape=input_shape, Mode=Mode, Dropout=drop_rate,Binary_Camera=Binary_Camera)
+    #else:
+    model = build_ROSS_32_50(input_shape=input_shape, Half_length=Half_length, Mode=Mode, Dropout=drop_rate)
 
     #model.load_weights('/home/antoine/Code/ROS/ROS/best_model_weights.h5')
     model.summary()
@@ -409,7 +398,7 @@ def train_model(units,drop_rate,learning_rate):
     genrerat_Graph(checkpoint_path, test_dataloader, GT_Output_shape, Type_of_Input,label='test',Save_fig=True,Binary_Camera=Binary_Camera,Radar_Range=Radar_Range)
     genrerat_Graph(checkpoint_path, train_dataloader, GT_Output_shape, Type_of_Input, label='train', Save_fig=True,Binary_Camera=Binary_Camera,Radar_Range=Radar_Range)
     genrerat_Graph(checkpoint_path, val_dataloader, GT_Output_shape, Type_of_Input, label='val', Save_fig=True,Binary_Camera=Binary_Camera,Radar_Range=Radar_Range)
-    '''
+
 
 for units in HP_NUM_UNITS:
     for drop_rate in HP_DROPOUT:
