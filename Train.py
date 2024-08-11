@@ -8,8 +8,6 @@ from time import sleep
 from tqdm import tqdm
 import warnings
 
-
-
 # Filter out specific TensorFlow warnings
 warnings.filterwarnings("ignore", message="TF-TRT Warning")
 
@@ -28,8 +26,17 @@ GT_Output_shape=(32, 2)
 input_shape=(256, 256, 1)
 
 # Sequence path:
-Data_path='/home/watercooledmt/PycharmProjects/ROS/Datasets/Pixset/'
+import os
 
+print(os.getcwd())
+
+# List files in the ROSS_Dataset directory
+files = os.listdir('./data/ROSS_Dataset')
+print(files)
+
+# file in os.listdir(Data_path):
+    #print(file)
+breakpoint()
 # Remove bad sequences:
 Remove_bad_sequences=False
 Bad_sequences=['20200730_003948_part44_2995_3195','20200730_003948_part44_5818_6095','20200730_003948_part44_6875_7500','20200803_151243_part45_1028_1128','20200803_151243_part45_1260_1524','20200803_151243_part45_2310_2560','20200803_151243_part45_4780_5005','20200803_174859_part46_1108_1219','20200803_174859_part46_2761_2861','20200805_002607_part48_2083_2282']
