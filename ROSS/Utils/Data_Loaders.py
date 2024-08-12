@@ -34,7 +34,7 @@ def Load_Radar_Data(radar_path, Half_length, Merge_Radar_images=0):
         return radar_data
 
 
-def Load_GT_Data(gt_path, GT_Output_shape, Half_length, GT_mode, Mode, FOV, Binary_Camera, Radar_Range):
+def Load_GT_Data(gt_path, GT_Output_shape, Half_length, GT_mode, Mode, FOV, Radar_Range):
     # Parameters:
 
     Type = 0  # 0: min value , 1: mean calue
@@ -86,29 +86,14 @@ def Load_GT_Data(gt_path, GT_Output_shape, Half_length, GT_mode, Mode, FOV, Bina
             GT_Output_data = GT_Output_data * 50 / Radar_Range
 
     GT_Output_data = np.clip(GT_Output_data, 0.51, 48.49)
-
-    if Binary_Camera:
-        # 0 if val < 25, 1 otherwise
-        GT_Output_data = np.where(GT_Output_data < 25, 0, 1)
-
-    # plt.plot(GT_Output_data)
-    # plt.pause(0.1)
-    # plt.clf()
     GT = np.stack((Have_GT, GT_Output_data), axis=1)
-    # print(GT.shape)
-    # breakpoint()
-
     return GT
 
 
-def load_sequence_data(sequence_path, input_shape, GT_Output_shape, Half_length, GT_mode, Mode, Add_Frontal_images, FOV,
-                       Merge_Radar_images, Binary_Camera, Radar_Range):
+def load_sequence_data(sequence_path, input_shape, GT_Output_shape, Half_length, GT_mode, Mode, FOV,
+                       Merge_Radar_images, Radar_Range):
     # data path
-    if Merge_Radar_images in [0, 1]:
-        radar_data_path = os.path.join(sequence_path, 'Radar_Data')
-    else:
-        radar_data_path = os.path.join(sequence_path, 'Radar_Data_Avg')
-
+    radar_data_path = os.path.join(sequence_path, 'Radar_Data')
     gt_path = os.path.join(sequence_path, 'GT')
 
     # sort the files
@@ -131,8 +116,7 @@ def load_sequence_data(sequence_path, input_shape, GT_Output_shape, Half_length,
                     List_of_merged_radars.append(radar_data_files[idx + 1])
             # Add GT data:
             gt_data.append(
-                Load_GT_Data(os.path.join(gt_path, gt_files[idx]), GT_Output_shape, Half_length, GT_mode, Mode, FOV,
-                             Binary_Camera, Radar_Range))
+                Load_GT_Data(os.path.join(gt_path, gt_files[idx]), GT_Output_shape, Half_length, GT_mode, Mode, FOV, Radar_Range))
             # Load the radar data:
             radar_data.append(
                 Load_Radar_Data([os.path.join(radar_data_path, file) for file in List_of_merged_radars], Half_length,
@@ -142,10 +126,9 @@ def load_sequence_data(sequence_path, input_shape, GT_Output_shape, Half_length,
         # load the data
         radar_data = [Load_Radar_Data(os.path.join(radar_data_path, file), Half_length) for file in radar_data_files]
         gt_data = [
-            Load_GT_Data(os.path.join(gt_path, file), GT_Output_shape, Half_length, GT_mode, Mode, FOV, Binary_Camera,
-                         Radar_Range) for file in gt_files]
+            Load_GT_Data(os.path.join(gt_path, file), GT_Output_shape, Half_length, GT_mode, Mode, FOV,Radar_Range) for file in gt_files]
 
-    if Add_Frontal_images == 0 and Radar_Range not in [25, 50]:
+    if Radar_Range not in [25, 50]:
 
         # Original dimensions
         real_x_dim = int(Radar_Range * radar_data[0].shape[0] / 25)
@@ -165,55 +148,6 @@ def load_sequence_data(sequence_path, input_shape, GT_Output_shape, Half_length,
             new_Radar_Data = new_Radar_Data[:, :, np.newaxis]
             radar_data[index] = new_Radar_Data
 
-    if Add_Frontal_images != 0:
-
-        # Camera Data:
-        if Add_Frontal_images in [1, 4]:
-            Frontal_images_path = os.path.join(sequence_path, 'Resized_images')
-        if Add_Frontal_images in [2, 5]:
-            Frontal_images_path = os.path.join(sequence_path, 'Bird_View')
-        if Add_Frontal_images in [3, 6]:
-            Frontal_images_path = os.path.join(sequence_path, 'Bird_View_RA')
-
-        images_files = natsorted(os.listdir(Frontal_images_path))
-
-        # Resize the radar data to fit the images shape:
-        # Original dimensions
-        x_dim = np.linspace(0, 1, radar_data[0].shape[0])
-        y_dim = np.linspace(0, 1, radar_data[0].shape[1])
-
-        # New dimensions
-        new_x = np.linspace(0, 1, input_shape[0])
-        new_y = np.linspace(0, 1, input_shape[1])
-
-        for index, Radar_Data in enumerate(radar_data):
-            # Interpolating
-            interp_func = interpolate.interp2d(y_dim, x_dim, Radar_Data.squeeze(), kind='linear')
-            new_Radar_Data = interp_func(new_y, new_x)
-            new_Radar_Data = new_Radar_Data[:, :, np.newaxis]
-
-            # Resize images to fit the radar data shape:
-            Image_to_load = cv2.imread(os.path.join(Frontal_images_path, images_files[index]),
-                                       cv2.COLOR_BGR2RGB).astype(np.uint8)
-            if FOV == 90:
-                if Add_Frontal_images in [1, 4]:
-                    # Frontal Camera:
-                    Image_to_load = Image_to_load[:, 141:1017, :]
-                if Add_Frontal_images in [3, 6]:
-                    # Bird View RA:
-                    Image_to_load = Image_to_load[:, 147:1051, :]
-                    # plt.imshow(Image_to_load)
-                    # plt.show()
-                if Add_Frontal_images in [2, 5]:
-                    # Raise an error if Bird View is not supported for FOV=90
-                    raise ValueError('Error: Bird View is not supported for FOV=90')
-
-            if Add_Frontal_images in [1, 2, 3]:
-                radar_data[index] = np.concatenate(
-                    (cv2.resize(Image_to_load, (input_shape[1], input_shape[0])), new_Radar_Data), axis=-1)
-            else:
-                radar_data[index] = cv2.resize(Image_to_load, (input_shape[1], input_shape[0]))
-
     # if GT_mode == 1 and GT = only out of range obstacles then remove data:
     if GT_mode == 1:
         radar_data = [radar for radar, gt in zip(radar_data, gt_data) if np.any(gt[:, 0] == 1)]
@@ -222,27 +156,16 @@ def load_sequence_data(sequence_path, input_shape, GT_Output_shape, Half_length,
     return radar_data, gt_data
 
 
-def create_dataset(sequence_paths, input_shape, GT_Output_shape, Half_length, GT_mode, Mode, Add_Frontal_images, FOV,
-                   Merge_Radar_images, Binary_Camera, Radar_Range):
+def create_dataset(sequence_paths, input_shape, GT_Output_shape, Half_length, GT_mode, Mode, FOV,Merge_Radar_images, Radar_Range):
     for sequence_path in sequence_paths:
-        radar_data, gt_data = load_sequence_data(sequence_path, input_shape, GT_Output_shape, Half_length, GT_mode,
-                                                 Mode, Add_Frontal_images, FOV, Merge_Radar_images, Binary_Camera,
-                                                 Radar_Range)
+        radar_data, gt_data = load_sequence_data(sequence_path, input_shape, GT_Output_shape, Half_length, GT_mode,Mode, FOV, Merge_Radar_images,Radar_Range)
 
         for radar, gt in zip(radar_data, gt_data):
             yield radar, gt
 
-def create_dataloader(sequence_paths, input_shape, GT_Output_shape, batch_size, Half_length, GT_mode, Mode,
-                      Add_Frontal_images, FOV, Merge_Radar_images, Binary_Camera, Radar_Range):
-    '''
-    total_samples = 0
-    for sequence_path in sequence_paths:
-        _, gt_data = load_sequence_data(sequence_path, GT_Output_shape, Half_length, GT_mode,Mode,Add_Frontal_images)
-        total_samples += len(gt_data)
-    '''
+def create_dataloader(sequence_paths, input_shape, GT_Output_shape, batch_size, Half_length, GT_mode, Mode, FOV, Merge_Radar_images, Radar_Range):
     dataset = tf.data.Dataset.from_generator(
-        lambda: create_dataset(sequence_paths, input_shape, GT_Output_shape, Half_length, GT_mode, Mode,
-                               Add_Frontal_images, FOV, Merge_Radar_images, Binary_Camera, Radar_Range),
+        lambda: create_dataset(sequence_paths, input_shape, GT_Output_shape, Half_length, GT_mode, Mode, FOV, Merge_Radar_images, Radar_Range),
         output_signature=(
             tf.TensorSpec(shape=input_shape, dtype=tf.float32),
             tf.TensorSpec(shape=GT_Output_shape, dtype=tf.float32)  # Assuming your GT data is of float type

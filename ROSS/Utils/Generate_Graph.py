@@ -6,8 +6,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 import os
 
 
-def genrerat_Graph(checkpoint_path, Data, GT_Output_shape, Type_of_Input_list, label, Save_fig=False,
-                   Binary_Camera=False, Radar_Range=25):
+def genrerat_Graph(checkpoint_path, Data, GT_Output_shape, label, Save_fig=False, Radar_Range=25):
 
     from .Data_Loaders import create_dataloader
     fontsize = 20
@@ -50,127 +49,70 @@ def genrerat_Graph(checkpoint_path, Data, GT_Output_shape, Type_of_Input_list, l
 
     HP_NUM_UNITS = int(units)  # [16, 32, 64, 128, 256]
 
-    Add_Frontal_images = Type_of_Input_list.index(
-        Type_of_Input)  # 0: No, 1:  + Resized, 2:  +Bird_view, 3: +Bird_view_RA, 4: Only Resized, 5: Only Bird_view, 6: Only Bird_view_RA
 
     if Half_length:
         input_shape = (128, 256, 1)
 
-    if Add_Frontal_images != 0:
-        if Add_Frontal_images in [1, 2, 3]:
-            input_shape = (250, 585, 4)
-        else:
-            input_shape = (250, 585, 3)
-
     # ==================== Load Model ====================
 
-    # if Add_Frontal_images!=0:
-    # model =build_ROS_32_50_Concatenate(input_shape=input_shape, Mode=Mode, Dropout=drop_rate)
-    # else:
-    # model = build_ROS_32_50(input_shape=input_shape, Half_length=Half_length, Mode=Mode, Dropout=drop_rate)
-
-    # Create model
-    if Add_Frontal_images != 0:
-        model = build_ROS_32_50_Concatenate(input_shape=input_shape, Mode=Mode, Dropout=drop_rate,
-                                            Binary_Camera=Binary_Camera)
-    else:
-        model = build_ROS_32_50(input_shape=input_shape, Half_length=Half_length, Mode=Mode, Dropout=drop_rate)
+    model = build_ROSS_32_50(input_shape=input_shape, Half_length=Half_length, Mode=Mode, Dropout=drop_rate)
 
     model.load_weights(checkpoint_path)
 
     # ==================== Visualize data ====================
 
     if isinstance(Data, list):
-        Data, _ = create_dataloader(Data, input_shape, GT_Output_shape, HP_NUM_UNITS, Half_length, GT_mode, Mode,
-                                    Add_Frontal_images)
+        Data, _ = create_dataloader(Data, input_shape, GT_Output_shape, HP_NUM_UNITS, Half_length, GT_mode, Mode)
     elif isinstance(Data, tf.data.Dataset):
         pass
 
     Pred_Full = []
     GT_Full = []
+    GT_Full_numpy = []
     Pred_val_Full = []
     Pred_val_Full_numpy = []
 
-    if Binary_Camera:
-        Number_of_Good_Pred = 0
-        Number_of_Pred = 0
-        for Radar, GT in Data:
-            # Predict
-            Predictions = model.predict(Radar)
+    for Radar, GT in Data:
+        # Predict
+        Predictions = model.predict(Radar)
 
-            # Apply threshold to Predictions
-            Predictions = np.where(Predictions >= 0.5, 1, 0)
+        if Mode == 1:
+            Predictions_index = Predictions.argmax(axis=-1)
 
-            # Convert Predictions to TensorFlow tensor
-            Predictions = tf.constant(Predictions, dtype=tf.int32)
+            # Get the value of the argmax
+            Predictions_Val = Predictions.max(axis=-1)
 
-            # Squeeze Predictions and convert GT to the same type as Predictions
+            Predictions_index = Predictions_index.reshape(Radar.shape[0], GT_Output_shape[0], 1)
+
+            Predictions_Val = Predictions_Val.reshape(Radar.shape[0], GT_Output_shape[0], 1)
+
+            if Half_length:
+                Predictions_index = Predictions_index
+
             for i in range(Radar.shape[0]):
-                squeezed_predictions = tf.squeeze(Predictions[i])
-                gt_values = tf.cast(GT[i][:, 1], dtype=tf.int32)
+                if GT_mode == 0:
+                    Pred_Full.append(Predictions_index[i])
+                    GT_Full.append(GT[i][:, 1])
+                    Pred_val_Full.append(Predictions_Val[i])
 
-                # Compare the tensors element-wise
-                good_predictions = tf.equal(squeezed_predictions, gt_values)
+                else:
+                    keep = np.where(GT[i][:, 0] == 1)[0]
 
-                # Count the number of good predictions
-                num_good_predictions = tf.reduce_sum(tf.cast(good_predictions, tf.int32))
+                    have_target, pos = GT[i][:, 0], GT[i][:, 1]
+                    mask = tf.cast(have_target, dtype=tf.bool)
 
-                Number_of_Good_Pred += num_good_predictions
-                Number_of_Pred += len(gt_values)
-                Pred_val_Full_numpy.append(Predictions[i])
+                    keep_have_target = np.where(have_target == 1)[0]
 
-        print('Accuracy for {label} set:', Number_of_Good_Pred / Number_of_Pred)
-        # Save the data as np
-        np.save(directory_path + '/' + label + 'Binary_Pred.npy', Pred_val_Full_numpy)
+                    masked_true_values = tf.boolean_mask(pos, mask)
+                    masked_pred_values = tf.boolean_mask(Predictions_index[i], mask)
+                    masked_pred_val = tf.boolean_mask(Predictions_Val[i], mask)
 
-    else:
-        Pred_Full = []
-        GT_Full = []
-        GT_Full_numpy = []
-        Pred_val_Full = []
-        Pred_val_Full_numpy = []
-
-        for Radar, GT in Data:
-            # Predict
-            Predictions = model.predict(Radar)
-
-            if Mode == 1:
-                Predictions_index = Predictions.argmax(axis=-1)
-
-                # Get the value of the argmax
-                Predictions_Val = Predictions.max(axis=-1)
-
-                Predictions_index = Predictions_index.reshape(Radar.shape[0], GT_Output_shape[0], 1)
-
-                Predictions_Val = Predictions_Val.reshape(Radar.shape[0], GT_Output_shape[0], 1)
-
-                if Half_length:
-                    Predictions_index = Predictions_index
-
-                for i in range(Radar.shape[0]):
-                    if GT_mode == 0:
-                        Pred_Full.append(Predictions_index[i])
-                        GT_Full.append(GT[i][:, 1])
-                        Pred_val_Full.append(Predictions_Val[i])
-
-                    else:
-                        keep = np.where(GT[i][:, 0] == 1)[0]
-
-                        have_target, pos = GT[i][:, 0], GT[i][:, 1]
-                        mask = tf.cast(have_target, dtype=tf.bool)
-
-                        keep_have_target = np.where(have_target == 1)[0]
-
-                        masked_true_values = tf.boolean_mask(pos, mask)
-                        masked_pred_values = tf.boolean_mask(Predictions_index[i], mask)
-                        masked_pred_val = tf.boolean_mask(Predictions_Val[i], mask)
-
-                        Pred_Full.append(masked_pred_values.numpy().tolist())
-                        GT_Full.append(masked_true_values.numpy().tolist())
-                        Pred_val_Full.append(masked_pred_val.numpy().tolist())
-                        Pred_val_Full_numpy.append(Predictions_index[i])
-                        # print(GT[i][:, 1].shape)
-                        GT_Full_numpy.append(GT[i][:, 1])
+                    Pred_Full.append(masked_pred_values.numpy().tolist())
+                    GT_Full.append(masked_true_values.numpy().tolist())
+                    Pred_val_Full.append(masked_pred_val.numpy().tolist())
+                    Pred_val_Full_numpy.append(Predictions_index[i])
+                    # print(GT[i][:, 1].shape)
+                    GT_Full_numpy.append(GT[i][:, 1])
 
         # Save the data as np
         np.save(directory_path + '/' + label + '_Pred.npy', Pred_val_Full_numpy)
