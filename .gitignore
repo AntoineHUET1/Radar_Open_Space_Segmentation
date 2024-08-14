@@ -1,9 +1,11 @@
 # Ignore all files in data and Results directories
 /data/
+# Ignore all files in data and Results directories
 /Results/
 
 # Ignore Test Files
 Test.py
+# Ignore Test Files
 TestTF.py
 
 
