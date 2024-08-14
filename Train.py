@@ -1,13 +1,10 @@
 import os
 import tensorflow as tf
-from tensorflow import keras
-from ROSS.Utils import genrerat_Graph,Generate_Data
-from ROSS.Model import build_ROSS_32_50, CustomFit
-from ROSS.Model import Metric_MAE, CustomLoss
-from time import sleep
-from tqdm import tqdm
+from ROSS.Utils import genrerat_Graph, Generate_Data
+from ROSS.Model import build_ROSS_32_50, Train_model, Metric_MAE, CustomLoss
 import warnings
 import ROSS.cfg.ROSS_Config as cfg
+import json
 
 
 # Get the directory of the current script
@@ -19,7 +16,9 @@ os.chdir(script_dir)
 # Filter out specific TensorFlow warnings
 warnings.filterwarnings("ignore", message="TF-TRT Warning")
 
-default_config_path = '.ROSS/cfg/ROSS_Config.py'
+default_config_path = '/ROSS/cfg/ROSS_Config.py'
+
+config_Path='/home/watercooledmt/PycharmProjects/Radar_Open_Space_Segmentation/Results/Radar/25m/Experience_1/config.py'
 
 Save_path = './Results'
 if not os.path.exists(Save_path):
@@ -45,9 +44,8 @@ Val_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files:T
 Test_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files + Val_files:]]
 
 # Radar_Range:
-if cfg.Radar_Range<=25:
+if cfg.Radar_Range <= 25:
     input_shape = (128, 256, 1)
-
 
 # ==================== Model ====================
 
@@ -67,23 +65,27 @@ callbacks = [
     )
 ]
 
+
 def train_model(cfg):
 
+    if not config_Path:
+        run_dir = Save_path + f"/Radar/{cfg.Radar_Range}m/"
 
-    run_dir = Save_path + f"/Radar/{cfg.Radar_Range}m/"
+        if not os.path.exists(run_dir):
+            os.makedirs(run_dir)
 
-    if not os.path.exists(run_dir):
-        os.makedirs(run_dir)
+        # Create Experience i directory inside run_dir
+        Existing_Experiences = os.listdir(run_dir)
+        Experience_number = len(Existing_Experiences) + 1
+        run_dir = run_dir + f'/Experience_{Experience_number}'
+        if not os.path.exists(run_dir):
+            os.makedirs(run_dir)
 
-    # Create Experience i directory inside run_dir
-    Existing_Experiences = os.listdir(run_dir)
-    Experience_number = len(Existing_Experiences) + 1
-    run_dir = run_dir + f'/Experience_{Experience_number}'
-    if not os.path.exists(run_dir):
-        os.makedirs(run_dir)
+        # Save the configuration file in the experience directory
+        os.system(f"cp {script_dir+default_config_path} {run_dir}/config.py")
+    else:
+        run_dir = os.path.dirname(config_Path)
 
-    # Save the configuration file in the experience directory
-    os.system(f"cp {default_config_path} {run_dir}/config.py")
 
     # Generate data
     train_dataloader, train_dataloader_length, val_dataloader, val_dataloader_length, test_dataloader, test_dataloader_length = Generate_Data(cfg, Train_sequence_paths, Val_sequence_paths, Test_sequence_paths)
@@ -92,126 +94,17 @@ def train_model(cfg):
 
     model.summary()
 
-    optimizer = keras.optimizers.Adam(learning_rate=cfg.HP_LR)
-    custom_model = CustomFit(model, acc_metric)
-    custom_model.compile(optimizer=optimizer, loss=loss)
+    print('------------------------------')
+    print('Training model')
+    print('------------------------------')
+    Train_model(cfg, model, acc_metric, loss, train_dataloader, train_dataloader_length, val_dataloader,val_dataloader_length,
+                                test_dataloader, test_dataloader_length, run_dir)
 
-    best_val_loss = float('inf')
-    best_val_acc = float('inf')
-
-    no_improvement_count = 0
-
-    # Training loop
-    for epoch in range(cfg.num_epochs):
-        if 'progress_bar' in locals():
-            progress_bar.close()
-
-        sleep(1)
-        print(f"Epoch {epoch + 1}/{cfg.num_epochs}:")
-
-        # Train the model
-        total_loss = 0.0
-        total_accuracy = 0.0
-        num_batches = 0
-
-        progress_bar = tqdm(total=train_dataloader_length, colour='white', desc=f"Train ", leave=False, unit="steps",
-                            ncols=100)
-        for batch_index, batch in enumerate(train_dataloader):
-            train_results = custom_model.train_step(batch)
-            total_loss += train_results["loss"].numpy()
-
-            x, y = batch
-            predict = custom_model.model(x, training=True)
-            total_accuracy += train_results["accuracy"].numpy()
-            num_batches += 1
-            mean_train_loss = total_loss / num_batches
-            mean_train_accuracy = total_accuracy / num_batches
-
-            # Update progress bar and display metrics
-            progress_bar.update(1)
-            progress_bar.set_postfix(loss=mean_train_loss, accuracy=mean_train_accuracy)
-
-        progress_bar.close()
-
-        progress_bar = tqdm(total=val_dataloader_length, colour='white', desc=f" Val ", leave=False, unit="steps",
-                            ncols=100)
-
-        # Evaluate the model on validation data
-        val_losses = 0
-        val_accuracies = 0
-        num_batches = 0
-
-        for batch_index, batch in enumerate(val_dataloader):
-            val_results = custom_model.test_step(batch)
-            val_losses += val_results["loss"].numpy()
-            val_accuracies += val_results["accuracy"].numpy()
-
-            num_batches += 1
-
-            mean_val_loss = val_losses / num_batches
-            mean_val_accuracy = val_accuracies / num_batches
-
-            # Update progress bar and display metrics
-            progress_bar.update(1)
-            progress_bar.set_postfix(loss=mean_val_loss, accuracy=mean_val_accuracy)
-
-        progress_bar.close()
-
-        # Print Epoch results (Train loss and accuracy, Validation loss and accuracy)
-        print(
-            f"Train loss: {mean_train_loss:.3f} , MAE: {mean_train_accuracy:.3f} | Validation loss: {mean_val_loss:.3f} , MAE: {mean_val_accuracy:.3f}")
-        # Save the model if the validation loss improved
-        custom_model.save_if_best(mean_val_loss, mean_val_accuracy, filepath="best_model_weights.weights.h5")
-
-        # Check for early stopping
-
-        if mean_val_loss < best_val_loss:
-            best_val_loss = mean_val_loss
-
-            no_improvement_count = 0
-
-        if mean_val_accuracy < best_val_acc:
-            best_val_acc = mean_val_accuracy
-            no_improvement_count = 0
-
-        if mean_val_loss > best_val_loss:  # and mean_val_accuracy > best_val_acc:
-            no_improvement_count += 1
-
-        if no_improvement_count >= cfg.patience:
-            print(f"No improvement in validation loss for {cfg.patience} consecutive epochs. Stopping training.")
-            break
-    # When training is over, load the best model and evaluate on test data
-    custom_model.model.load_weights("best_model_weights.weights.h5")
-
-    # Evaluate the model on test data
-    test_losses = 0
-    test_accuracies = 0
-    num_batches = 0
-
-    progress_bar = tqdm(total=test_dataloader_length, colour='white', desc=f" Test ", leave=False, unit="steps",
-                        ncols=100)
-
-    for batch_index, batch in enumerate(test_dataloader):
-        test_results = custom_model.test_step(batch)
-        test_losses += test_results["loss"].numpy()
-        test_accuracies += test_results["accuracy"].numpy()
-
-        num_batches += 1
-
-        mean_test_loss = test_losses / num_batches
-        mean_test_accuracy = test_accuracies / num_batches
-
-        # Update progress bar and display metrics
-        progress_bar.update(1)
-        progress_bar.set_postfix(loss=mean_test_loss, accuracy=mean_test_accuracy)
-
-    progress_bar.close()
-
-    print(f"Test loss: {mean_test_loss:.3f} , MAE: {mean_test_accuracy:.3f}")
-
-    checkpoint_path = run_dir + f"/best_model_weights_{mean_test_accuracy:.3f}.weights.h5"
-    # Copy best_model_weights.h5 to run_dir
-    os.rename("best_model_weights.weights.h5", checkpoint_path)
+    print('\n------------------------------')
+    print('Generating Graphs')
+    print('------------------------------')
+    # Best model path
+    checkpoint_path=run_dir+"/best_model_weights.weights.h5"
 
     # Generate graph:
     genrerat_Graph(checkpoint_path, test_dataloader, cfg, label='test', Save_fig=True)

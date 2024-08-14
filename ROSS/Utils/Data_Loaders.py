@@ -2,10 +2,10 @@ from scipy import interpolate
 from natsort import natsorted
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
-import cv2
 import tensorflow as tf
 import numpy as np
 import os
+import json
 
 
 def Load_Radar_Data(radar_path, cfg):
@@ -153,6 +153,9 @@ def create_dataset(sequence_paths,cfg):
         for radar, gt in zip(radar_data, gt_data):
             yield radar, gt
 
+def count_batches(dataset):
+    return sum(1 for _ in dataset)
+
 def create_dataloader(sequence_paths,cfg):
     dataset = tf.data.Dataset.from_generator(
         lambda: create_dataset(sequence_paths, cfg),
@@ -165,12 +168,42 @@ def create_dataloader(sequence_paths,cfg):
     dataset = dataset.batch(cfg.HP_BATCH_SIZE)
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
-    dataloader_length = 0  # total_samples // batch_size
+    # Convert list of paths to a tuple
+    sequence_paths_tuple = tuple(sequence_paths)
+
+    cache = load_cache(cfg.CACHE_FILE)
+
+    if json.dumps(sequence_paths_tuple) in cache:
+        dataloader_length = cache[json.dumps(sequence_paths_tuple)]
+    else:
+        dataloader_length = count_batches(dataset)
+        cache[json.dumps(sequence_paths_tuple)] = dataloader_length
+        save_cache(cache, cfg.CACHE_FILE)
+
     return dataset, dataloader_length
 
 def Generate_Data(cfg, Train_sequence_paths, Val_sequence_paths, Test_sequence_paths):
     train_dataloader, train_dataloader_length = create_dataloader(Train_sequence_paths, cfg)
     val_dataloader, val_dataloader_length = create_dataloader(Val_sequence_paths, cfg)
     test_dataloader, test_dataloader_length = create_dataloader(Test_sequence_paths, cfg)
-    train_dataloader_length, val_dataloader_length, test_dataloader_length = 2 * 523, 2 * 37, 2 * 45
     return train_dataloader, train_dataloader_length, val_dataloader, val_dataloader_length, test_dataloader, test_dataloader_length
+
+def serialize_cache(cache):
+    # Convert dictionary keys to strings
+    return {json.dumps(key): value for key, value in cache.items()}
+
+def deserialize_cache(serialized_cache):
+    # Convert dictionary keys back to tuples
+    return {json.loads(key): value for key, value in serialized_cache.items()}
+
+def load_cache(cache_file):
+    if os.path.exists(cache_file):
+        with open(cache_file, 'r') as f:
+            serialized_cache = json.load(f)
+            return deserialize_cache(serialized_cache)
+    return {}
+
+def save_cache(cache, cache_file):
+    serialized_cache = serialize_cache(cache)
+    with open(cache_file, 'w') as f:
+        json.dump(serialized_cache, f)

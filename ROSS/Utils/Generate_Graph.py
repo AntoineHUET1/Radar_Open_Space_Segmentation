@@ -25,6 +25,12 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False):
 
     # ==================== Visualize data ====================
 
+    # Check if the graph as already been generated
+    if (os.path.exists(directory_path + '/' + label + '_Error_Distribution.png') and
+        os.path.exists(directory_path + '/' + label + '_Prediction_confidence_level_MAE.png')):
+        print(label+' graphs already generated')
+        return
+
     Pred_Full = []
     GT_Full = []
     GT_Full_numpy = []
