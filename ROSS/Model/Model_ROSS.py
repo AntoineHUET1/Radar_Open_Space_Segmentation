@@ -7,12 +7,12 @@ import numpy as np
 
 
 
-def build_ROSS_32_50(input_shape=(256, 256, 1),Half_length=False,Mode=0,Dropout=0.2):
+def build_ROSS_32_50(cfg):
 
     """
     input_shape -> (height, width, channel)
     """
-    img_input = keras.Input(shape=input_shape)
+    img_input = keras.Input(shape=cfg.input_shape)
 
     # Block 1:
     x = layers.Conv2D(64, (3, 3), activation="relu", padding="same", name="block1_conv1")(img_input)
@@ -40,8 +40,7 @@ def build_ROSS_32_50(input_shape=(256, 256, 1),Half_length=False,Mode=0,Dropout=
     x = layers.ELU()(x)
     x = layers.MaxPooling2D((2, 1), strides=(2, 1))(x)
 
-
-    x = layers.Dropout(Dropout)(x)
+    x = layers.Dropout(cfg.HP_DROPOUT)(x)
 
     # Block 5:
     x = layers.Conv2D(256, (3, 3), strides=(1, 1), padding="same")(x)
@@ -50,7 +49,7 @@ def build_ROSS_32_50(input_shape=(256, 256, 1),Half_length=False,Mode=0,Dropout=
     x = layers.ELU()(x)
     x = layers.MaxPooling2D((2, 1), strides=(2, 1))(x)
 
-    x = layers.Dropout(Dropout)(x)
+    x = layers.Dropout(cfg.HP_DROPOUT)(x)
 
     # Block 6:
     x = layers.Conv2D(256, (3, 3), strides=(1, 1), padding="same")(x)
@@ -59,7 +58,7 @@ def build_ROSS_32_50(input_shape=(256, 256, 1),Half_length=False,Mode=0,Dropout=
     x = layers.ELU()(x)
     x = layers.MaxPooling2D((2, 1), strides=(2, 1))(x)
 
-    x = layers.Dropout(Dropout)(x)
+    x = layers.Dropout(cfg.HP_DROPOUT)(x)
 
     # Block 7:
     x = layers.Conv2D(256, (3, 3), strides=(1, 1), padding="same")(x)
@@ -69,7 +68,7 @@ def build_ROSS_32_50(input_shape=(256, 256, 1),Half_length=False,Mode=0,Dropout=
     x = layers.MaxPooling2D((2, 1), strides=(2, 1))(x)
 
     # Block 8
-    if Half_length:
+    if cfg.Radar_Range <= 25:
         x = layers.Conv2D(2048, (1, 1), strides=(1, 1), padding="valid")(x)
     else:
         x = layers.Conv2D(2048, (2, 1), strides=(1, 1), padding="valid")(x)
@@ -79,17 +78,10 @@ def build_ROSS_32_50(input_shape=(256, 256, 1),Half_length=False,Mode=0,Dropout=
     x = layers.Conv2D(2048, (1, 1), strides=(1, 1))(x)
     x = layers.ELU()(x)
 
-    x = layers.Dropout(Dropout)(x)
+    x = layers.Dropout(cfg.HP_DROPOUT)(x)
 
-
-    if Mode==0:
-        # Replace the classification layers with regression layers
-        x = layers.Conv2D(1, (1, 1), strides=(1, 1), activation="linear")(x)
-        x = layers.Reshape((32, 1))(x)
-    else:
-
-        x = layers.Conv2D(50, (1, 1), strides=(1, 1), activation="softmax")(x)
-        x = layers.Reshape((32, 50))(x)
+    x = layers.Conv2D(50, (1, 1), strides=(1, 1), activation="softmax")(x)
+    x = layers.Reshape((32, 50))(x)
 
     model = tf.keras.models.Model(inputs=img_input, outputs=x)
 

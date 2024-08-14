@@ -1,12 +1,14 @@
 import os
 import tensorflow as tf
 from tensorflow import keras
-from ROSS.Utils import create_dataloader, genrerat_Graph
-from ROSS.Model import build_ROSS_32_50
+from ROSS.Utils import genrerat_Graph,Generate_Data
+from ROSS.Model import build_ROSS_32_50, CustomFit
 from ROSS.Model import Metric_MAE, CustomLoss
 from time import sleep
 from tqdm import tqdm
 import warnings
+import ROSS.cfg.ROSS_Config as cfg
+
 
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -14,65 +16,43 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 # Change the working directory to the script's directory
 os.chdir(script_dir)
 
-
 # Filter out specific TensorFlow warnings
 warnings.filterwarnings("ignore", message="TF-TRT Warning")
 
-Save_path = './Results/'
+default_config_path = '.ROSS/cfg/ROSS_Config.py'
+
+Save_path = './Results'
 if not os.path.exists(Save_path):
     os.makedirs(Save_path)
 
-# Set seed:
-
-# ==================== Parameters ====================
-# Train Test Val:
-Val_ratio = 0.1
-Test_ratio = 0.1
-
-# Input and Output shape:
-GT_Output_shape = (32, 2)
-input_shape = (256, 256, 1)
+# ==================== Set Up Data ====================
 
 # List files in the ROSS_Dataset directory
-Data_path = './data/ROSS_Dataset/'
+Sequence_List = os.listdir(cfg.Data_path)
 
-# Remove bad sequences:
-Remove_bad_sequences = False
-Bad_sequences = ['20200730_003948_part44_2995_3195', '20200730_003948_part44_5818_6095',
-                 '20200730_003948_part44_6875_7500', '20200803_151243_part45_1028_1128',
-                 '20200803_151243_part45_1260_1524', '20200803_151243_part45_2310_2560',
-                 '20200803_151243_part45_4780_5005', '20200803_174859_part46_1108_1219',
-                 '20200803_174859_part46_2761_2861', '20200805_002607_part48_2083_2282']
+# Remove bad sequences from list:
+if cfg.Remove_bad_sequences:
+    Sequence_List = [seq for seq in Sequence_List if seq not in cfg.Bad_sequences]
 
-# 50 m or 25 m detection:
-Half_length = True
-Radar_Range = 25  # 50,25,20,15,10,5
+# Test, Train, Validation split:
+Number_of_files = len(Sequence_List)
+Val_files = int(Number_of_files * cfg.Val_ratio)
+Test_files = int(Number_of_files * cfg.Test_ratio)
+Train_files = Number_of_files - Val_files - Test_files
 
-# Merge t-1,t and t+1 Radar images:
-Merge_Radar_images = 1  # 0,1 # 0: No, Yes
-if Merge_Radar_images == 2:
-    Bad_Sequences = ['20200730_003948_part44_2995_3195', '20200730_003948_part44_2995_3195',
-                     '20200706_144800_part25_2160_2784', '20200706_164938_part20_3225_3810',
-                     '20200622_142617_part18_450_910']
-    Remove_bad_sequences = True
+Train_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[:Train_files]]
+Val_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files:Train_files + Val_files]]
+Test_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files + Val_files:]]
 
-# Categorical or regression:
-Mode = 1  # 0: Regression, 1: Categorical
+# Radar_Range:
+if cfg.Radar_Range<=25:
+    input_shape = (128, 256, 1)
 
-# ROSS FOV
-FOV = 90  # 0: 120, 1: 90
 
-# Have GT data:
-GT_mode = 1  # 0: All Data, 1: Only obstacles in range
+# ==================== Model ====================
 
-#
-num_epochs = 100
-patience = 10  # Number of epochs to wait for improvement
-
-HP_NUM_UNITS = [16]  # [32, 64, 128]
-HP_DROPOUT = [0.2]  # [0.1, 0.2, 0.3, 0.5]
-HP_LR = [1e-5]  # [1e-3, 1e-4, 1e-5]
-
+acc_metric = Metric_MAE(cfg)
+loss = CustomLoss()
 
 # ==================== Callbacks ====================
 
@@ -80,158 +60,40 @@ callbacks = [
     tf.keras.callbacks.ReduceLROnPlateau(
         monitor="val_loss",
         factor=0.1,
-        patience=patience,
+        patience=cfg.patience,
         verbose=0,
         mode="auto",
         min_lr=0.000001,
     )
 ]
 
-# ==================== Set Up Data ====================
-# (None, 250, 585, 3)  (None, 250, 585, 4)
-if Half_length:
-    input_shape = (128, 256, 1)
-
-# Test, Train, Validation:
-Sequence_List = os.listdir(Data_path)
-
-# Remove bad sequences from list:
-if Remove_bad_sequences:
-    for bad_sequence in Bad_sequences:
-        Sequence_List.remove(bad_sequence)
-# Remove bad sequences from list:
-
-Number_of_files = len(Sequence_List)
-Val_files = int(Number_of_files * Val_ratio)
-Test_files = int(Number_of_files * Test_ratio)
-Train_files = Number_of_files - Val_files - Test_files
-
-Train_sequence_paths = []
-Val_sequence_paths = []
-Test_sequence_paths = []
-
-for i in range(Train_files):
-    Train_sequence_paths.append(Data_path + Sequence_List[i])
-for i in range(Train_files, Train_files + Val_files):
-    Val_sequence_paths.append(Data_path + Sequence_List[i])
-for i in range(Train_files + Val_files, Number_of_files):
-    Test_sequence_paths.append(Data_path + Sequence_List[i])
-
-'''
-Easy = ['20200706_202209_part31_2636_2746' , '20200610_185206_part1_5095_5195']
-Medium = ['20200616_151155_part9_750_900','20200615_184724_part6_5180_5280']
-Hard = ['20200706_162218_part21_790_960','20200622_142945_part19_480_700' , '20200615_184724_part6_5180_5280']
-Night = ['20200730_003948_part44_2995_3195','20200730_003948_part44_5818_6095','20200730_003948_part44_6875_7500']
-Rain = ['20200803_151243_part45_1028_1128','20200803_151243_part45_2310_2560']
-
-Train_sequence_paths=['/home/watercooledmt/PycharmProjects/ROS/Datasets/Pixset/'+ x for x in Easy]
-Val_sequence_paths=['/home/watercooledmt/PycharmProjects/ROS/Datasets/Pixset/'+ x for x in Night]
-Test_sequence_paths=['/home/watercooledmt/PycharmProjects/ROS/Datasets/Pixset/'+ x for x in Rain]
-'''
-
-# ==================== Visualize data ====================
-# Raw data:
-# visualize_data(Data_path+'20200706_143808_part26_1200_1360')
-
-# Modified data:
-# visualize_modified_data([Data_path+'20200618_175654_part15_1380_1905'],GT_Output_shape)
-
-# ==================== Dataloader ====================
-
-def Generate_Data(batch_size=32, FOV=120):
-    train_dataloader, train_dataloader_length = create_dataloader(Train_sequence_paths, input_shape, GT_Output_shape,
-                                                                  batch_size, Half_length, GT_mode, Mode, FOV, Merge_Radar_images,Radar_Range)
-    val_dataloader, val_dataloader_length = create_dataloader(Val_sequence_paths, input_shape, GT_Output_shape,
-                                                              batch_size, Half_length, GT_mode, Mode, FOV, Merge_Radar_images,Radar_Range)
-    test_dataloader, test_dataloader_length = create_dataloader(Test_sequence_paths, input_shape, GT_Output_shape,
-                                                                batch_size, Half_length, GT_mode, Mode, FOV, Merge_Radar_images,Radar_Range)
-    train_dataloader_length, val_dataloader_length, test_dataloader_length = 2 * 523, 2 * 37, 2 * 45
-    return train_dataloader, train_dataloader_length, val_dataloader, val_dataloader_length, test_dataloader, test_dataloader_length
+def train_model(cfg):
 
 
-# ==================== Test ====================
+    run_dir = Save_path + f"/Radar/{cfg.Radar_Range}m/"
 
-if Mode == 0:
-    loss_func = CustomLoss()
-else:
-    loss_func = CustomLoss()
+    if not os.path.exists(run_dir):
+        os.makedirs(run_dir)
 
+    # Create Experience i directory inside run_dir
+    Existing_Experiences = os.listdir(run_dir)
+    Experience_number = len(Existing_Experiences) + 1
+    run_dir = run_dir + f'/Experience_{Experience_number}'
+    if not os.path.exists(run_dir):
+        os.makedirs(run_dir)
 
-class CustomFit(keras.Model):
-    def __init__(self, model):
-        super(CustomFit, self).__init__()
-        self.model = model
-        self.best_val_loss = float('inf')
-        self.best_val_acc = float('inf')
+    # Save the configuration file in the experience directory
+    os.system(f"cp {default_config_path} {run_dir}/config.py")
 
-    def compile(self, optimizer, loss):
-        super(CustomFit, self).compile()
-        self.optimizer = optimizer
-        self.loss = loss
-
-    def build(self, input_shape):
-        self.model.build(input_shape)
-        super(CustomFit, self).build(input_shape)
-
-    @tf.function
-    def train_step(self, data):
-        acc_metric.reset_state()
-        x, y = data
-
-        with tf.GradientTape() as tape:  # Forward Propagation
-            y_pred = self.model(x, training=True)
-            loss = self.loss(y, y_pred)
-
-        trainable_vars = self.model.trainable_variables  # Get all trainable variables
-        gradients = tape.gradient(loss, trainable_vars)
-
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))  # Backward Propagation
-        acc_metric.update_state(y, y_pred)
-        return {"loss": loss, "accuracy": acc_metric.result()}
-
-    @tf.function
-    def test_step(self, data):
-        acc_metric.reset_state()
-        x, y = data
-        y_pred = self.model(x, training=False)
-        loss = self.loss(y, y_pred)
-        acc_metric.update_state(y, y_pred)
-        return {"loss": loss, "accuracy": acc_metric.result()}
-
-    def call(self, inputs, training=None, mask=None):
-        return self.model(inputs, training=training, mask=mask)
-
-    def save_if_best(self, val_loss, val_acc, filepath):
-
-        if val_loss < self.best_val_loss or val_acc < self.best_val_acc:
-            print(
-                f"Validation loss improved => Saving model")  # "#from {self.best_val_loss:.3f} to {val_loss:.3f} => Saving model.")
-            self.best_val_loss = val_loss
-            self.best_val_acc = val_acc
-            self.model.save_weights(filepath)
-        else:
-            print(f"Validation loss did not improve")  # from {self.best_val_loss}.")
-
-
-# ==================== Model ====================
-
-acc_metric = Metric_MAE(Mode=Mode, Half_length=Half_length, GT_mode=GT_mode)
-loss = loss_func
-import numpy as np
-
-
-def train_model(units, drop_rate, learning_rate):
     # Generate data
-    train_dataloader, train_dataloader_length, val_dataloader, val_dataloader_length, test_dataloader, test_dataloader_length = Generate_Data(
-        batch_size=units, FOV=FOV)
+    train_dataloader, train_dataloader_length, val_dataloader, val_dataloader_length, test_dataloader, test_dataloader_length = Generate_Data(cfg, Train_sequence_paths, Val_sequence_paths, Test_sequence_paths)
 
-    model = build_ROSS_32_50(input_shape=input_shape, Half_length=Half_length, Mode=Mode, Dropout=drop_rate)
+    model = build_ROSS_32_50(cfg)
 
-    # model.load_weights('/home/antoine/Code/ROS/ROS/best_model_weights.h5')
     model.summary()
 
-    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-    custom_model = CustomFit(model)
+    optimizer = keras.optimizers.Adam(learning_rate=cfg.HP_LR)
+    custom_model = CustomFit(model, acc_metric)
     custom_model.compile(optimizer=optimizer, loss=loss)
 
     best_val_loss = float('inf')
@@ -240,12 +102,12 @@ def train_model(units, drop_rate, learning_rate):
     no_improvement_count = 0
 
     # Training loop
-    for epoch in range(num_epochs):
+    for epoch in range(cfg.num_epochs):
         if 'progress_bar' in locals():
             progress_bar.close()
 
         sleep(1)
-        print(f"Epoch {epoch + 1}/{num_epochs}:")
+        print(f"Epoch {epoch + 1}/{cfg.num_epochs}:")
 
         # Train the model
         total_loss = 0.0
@@ -315,8 +177,8 @@ def train_model(units, drop_rate, learning_rate):
         if mean_val_loss > best_val_loss:  # and mean_val_accuracy > best_val_acc:
             no_improvement_count += 1
 
-        if no_improvement_count >= patience:
-            print(f"No improvement in validation loss for {patience} consecutive epochs. Stopping training.")
+        if no_improvement_count >= cfg.patience:
+            print(f"No improvement in validation loss for {cfg.patience} consecutive epochs. Stopping training.")
             break
     # When training is over, load the best model and evaluate on test data
     custom_model.model.load_weights("best_model_weights.weights.h5")
@@ -347,46 +209,14 @@ def train_model(units, drop_rate, learning_rate):
 
     print(f"Test loss: {mean_test_loss:.3f} , MAE: {mean_test_accuracy:.3f}")
 
-    # Model_Save_Dir:
-
-    if Mode == 0:
-        mode_prefix = 'Regression'
-    else:
-        mode_prefix = 'Categorical'
-
-    if Half_length:
-        distance_prefix = '25m'
-    else:
-        distance_prefix = '50m'
-
-    run_dir = Save_path + f"Results/{distance_prefix}/{mode_prefix}/Radar/{units}units_{drop_rate}dropout_{learning_rate}learning_rate_{GT_mode}GT_mode_FOV_{FOV}_Radar_Range_{Radar_Range}"
-
-    run_dir = run_dir
-    print(run_dir)
-    if not os.path.exists(run_dir):
-        print("Creating directory")
-        os.makedirs(run_dir)
-
-    # Create Experience i directory inside run_dir
-    Existing_Experiences = os.listdir(run_dir)
-    Experience_number = len(Existing_Experiences) + 1
-    run_dir = run_dir + f'/Experience_{Experience_number}'
-    if not os.path.exists(run_dir):
-        print("Creating directory")
-        os.makedirs(run_dir)
-
     checkpoint_path = run_dir + f"/best_model_weights_{mean_test_accuracy:.3f}.weights.h5"
-    print(checkpoint_path)
     # Copy best_model_weights.h5 to run_dir
     os.rename("best_model_weights.weights.h5", checkpoint_path)
 
     # Generate graph:
-    genrerat_Graph(checkpoint_path, test_dataloader, GT_Output_shape, label='test', Save_fig=True, Radar_Range=Radar_Range)
-    genrerat_Graph(checkpoint_path, train_dataloader, GT_Output_shape, label='train', Save_fig=True, Radar_Range=Radar_Range)
-    genrerat_Graph(checkpoint_path, val_dataloader, GT_Output_shape, label='val', Save_fig=True, Radar_Range=Radar_Range)
+    genrerat_Graph(checkpoint_path, test_dataloader, cfg, label='test', Save_fig=True)
+    genrerat_Graph(checkpoint_path, train_dataloader, cfg, label='train', Save_fig=True)
+    genrerat_Graph(checkpoint_path, val_dataloader, cfg, label='val', Save_fig=True)
 
 
-for units in HP_NUM_UNITS:
-    for drop_rate in HP_DROPOUT:
-        for learning_rate in HP_LR:
-            train_model(units, drop_rate, learning_rate)
+train_model(cfg)
