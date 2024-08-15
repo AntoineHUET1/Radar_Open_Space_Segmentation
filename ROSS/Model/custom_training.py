@@ -101,13 +101,14 @@ def retrieve_training_info(log_file_path):
                     best_val_acc = val_accuracy
                     best_epoch = epoch
                     patience = 0
-    last_epoch=last_epoch+1
     # Return results
     return last_epoch, best_val_loss, best_val_acc, best_epoch ,patience
 
 def Train_model(cfg, model, acc_metric, loss, train_dataloader, train_dataloader_length, val_dataloader,val_dataloader_length,
                                 test_dataloader, test_dataloader_length, run_dir):
-
+    print('------------------------------')
+    print('Training model')
+    print('------------------------------')
     # Load logs if they exist:
     log_file_path = os.path.join(run_dir, "training_log.txt")
 

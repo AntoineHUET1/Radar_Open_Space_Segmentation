@@ -22,7 +22,7 @@ Bad_sequences = [
 ]
 
 # 50 m or 25 m detection:
-Radar_Range = 25  # 50, 25, 20, 15, 10, 5
+Radar_Range = 10  # 50, 25, 20, 15, 10, 5
 
 if Radar_Range <= 25:
     input_shape = (128, 256, 1)

@@ -207,3 +207,29 @@ def save_cache(cache, cache_file):
     serialized_cache = serialize_cache(cache)
     with open(cache_file, 'w') as f:
         json.dump(serialized_cache, f)
+
+def format_value(value):
+    """Format the value for Python source code representation."""
+    if isinstance(value, str):
+        return f'"{value}"'
+    elif isinstance(value, list):
+        return f'[{", ".join(format_value(v) for v in value)}]'
+    elif isinstance(value, tuple):
+        return f'({", ".join(format_value(v) for v in value)})'
+    elif isinstance(value, dict):
+        return f'{{{", ".join(f"{format_value(k)}: {format_value(v)}" for k, v in value.items())}}}'
+    elif isinstance(value, bool):
+        return 'True' if value else 'False'
+    elif isinstance(value, (int, float)):
+        return str(value)
+    else:
+        raise TypeError(f'Unsupported type: {type(value)}')
+
+def save_config(cfg, config_path):
+    """Save the configuration to a Python file."""
+    with open(config_path, 'w') as f:
+        for attr in dir(cfg):
+            if not attr.startswith('__'):
+                value = getattr(cfg, attr)
+                formatted_value = format_value(value)
+                f.write(f"{attr} = {formatted_value}\n")
