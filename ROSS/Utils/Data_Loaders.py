@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from scipy import interpolate
 from natsort import natsorted
 from sklearn.cluster import DBSCAN
@@ -6,7 +7,8 @@ import tensorflow as tf
 import numpy as np
 import os
 import json
-
+from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import LinearNDInterpolator
 
 def Load_Radar_Data(radar_path, cfg):
     if cfg.Merge_Radar_images == 1:
@@ -120,23 +122,41 @@ def load_sequence_data(sequence_path,cfg):
 
     if cfg.Radar_Range not in [25, 50]:
 
-        # Original dimensions
-        real_x_dim = int(cfg.Radar_Range * radar_data[0].shape[0] / 25)
-        x_dim = np.linspace(0, 1, real_x_dim)
-        y_dim = np.linspace(0, 1, radar_data[0].shape[1])
+        if cfg.Radar_Range > 25:
+            Factor=50
+        else:
+            Factor=25
 
-        # New dimensions
-        new_x = np.linspace(0, 1, radar_data[0].shape[0])
-        new_y = np.linspace(0, 1, radar_data[0].shape[1])
+        # Original dimensions
+        real_x_dim = int(cfg.Radar_Range * radar_data[0].shape[0] / Factor)
+        # Original grid dimensions
+        x_dim = np.linspace(0, real_x_dim - 1, real_x_dim)
+        y_dim = np.linspace(0, radar_data[0].shape[1] - 1, radar_data[0].shape[1])
+
+        # Desired new grid dimensions
+        new_x_dim = np.linspace(0, real_x_dim - 1, radar_data[0].shape[0])
+        new_y_dim = np.linspace(0, radar_data[0].shape[1] - 1, radar_data[0].shape[1])
+
 
         for index, Radar_Data in enumerate(radar_data):
             # Interpolating
             Radar_Data = Radar_Data[Radar_Data.shape[0] - real_x_dim:Radar_Data.shape[0], :]
 
-            interp_func = interpolate.interp2d(y_dim, x_dim, Radar_Data.squeeze(), kind='linear')
-            new_Radar_Data = interp_func(new_y, new_x)
-            new_Radar_Data = new_Radar_Data[:, :, np.newaxis]
-            radar_data[index] = new_Radar_Data
+            # Squeeze the last dimension for interpolation, keeping the (x, y) shape
+            Radar_Data_squeezed = Radar_Data.squeeze()
+
+            # Create the interpolator function
+            interp_func = RegularGridInterpolator((x_dim, y_dim), Radar_Data_squeezed, method='linear')
+
+            # Generate a meshgrid for the new dimensions
+            new_x_grid, new_y_grid = np.meshgrid(new_x_dim, new_y_dim, indexing='ij')
+
+            # Interpolate over the new grid
+            new_radar_data = interp_func((new_x_grid, new_y_grid))
+
+            # Add the third dimension back
+            new_radar_data = new_radar_data[..., np.newaxis]  # shape becomes (new_x, new_y, 1)
+            radar_data[index] = new_radar_data
 
     # if GT_mode == 1 and GT = only out of range obstacles then remove data:
     if cfg.GT_mode == 1:

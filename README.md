@@ -54,6 +54,61 @@ mkdir -p data
 ln -s $DATASET data/ROSS_Dataset
 ```
 
+## Getting Started: 
 
+### Training
 
+**To train the model**, run the following command:
+```bash
+python main.py --mode train
+```
+This will run the default training parameters stored in [ROSS_Config.py](ROSS%2Fcfg%2FROSS_Config.py)
 
+**To resume a interrupted training session**, run the following command:
+```bash
+python main.py --mode train --config_path $CONFIG_PATH
+```
+with `$CONFIG_PATH` being the path to the configuration file stored in the experiment [results](Results) folder.
+
+#### Command lines arguments for training pipeline
+
+- `--config_path` (optional, string): Path to the configuration file. If provided, this will override the default configuration used in the project.
+
+- `--radar_range` (optional, integer): Defines the range of the radar detection in meters.
+
+- `--ROSS_FOV` (optional, integer): Sets the Field of View (FOV) for the ROSS system in degrees.
+
+- `--GT_mode` (optional, integer): Defines the mode for ground truth (GT) data handling:
+  - `0`: Use all available data for training and evaluation.
+  - `1`: Use only data where obstacles are within the radar's range.
+
+- `--num_epochs` (optional, integer): Sets the number of epochs to run during training.
+
+- `--patience` (optional, integer): Specifies the number of epochs to wait before stopping training if no improvement is observed. 
+
+### Visualize data
+
+**To visualize data**, run the following command:
+```bash
+python main.py --mode visualize
+```
+
+#### Command lines arguments for visualization pipeline
+
+- `--sequence` (optional, string): Name of the sequence to visualize. If not provided, a random sequence from the dataset will be used.
+- `--Radar` (optional, boolean, default: True): Determines whether to visualize radar data. 
+- `--FrontCamera` (optional, boolean, default: True): Determines whether to visualize front camera data.
+- `--GT` (optional, boolean, default: True): Determines whether to visualize ground truth data.
+- `--Frame` (optional, integer): Specifies the frame number to visualize. If not provided, the entire sequence will be visualized.
+
+### Inference
+
+**To inference data**, run the following command:
+```bash
+python main.py --mode inference
+```
+
+#### Command lines arguments for inference pipeline
+
+- `--config_path` (required, string): Path to the configuration file stored in the experiment [results](Results) folder you want to use for inference.
+- `--DataPath` (optional, string): Path to the data to be inferred. Provide a specific`.npy` file, a directory or a sequence path from [data](data) folder. If not provided, a random sequence from the dataset will be used.
