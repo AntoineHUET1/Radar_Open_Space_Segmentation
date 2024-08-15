@@ -58,13 +58,13 @@ ln -s $DATASET data/ROSS_Dataset
 
 ### Training
 
-**To train the model**, run the following command:
+To train the model, run the following command:
 ```bash
 python main.py --mode train
 ```
 This will run the default training parameters stored in [ROSS_Config.py](ROSS%2Fcfg%2FROSS_Config.py)
 
-**To resume a interrupted training session**, run the following command:
+To resume a interrupted training session, run the following command:
 ```bash
 python main.py --mode train --config_path $CONFIG_PATH
 ```
@@ -88,7 +88,7 @@ with `$CONFIG_PATH` being the path to the configuration file stored in the exper
 
 ### Visualize data
 
-**To visualize data**, run the following command:
+To visualize data, run the following command:
 ```bash
 python main.py --mode visualize
 ```
@@ -103,7 +103,7 @@ python main.py --mode visualize
 
 ### Inference
 
-**To inference data**, run the following command:
+To inference data, run the following command:
 ```bash
 python main.py --mode inference
 ```
