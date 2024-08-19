@@ -11,6 +11,12 @@ ROSS is a deep convolutional neural network designed to process raw radar data f
 1. [Installation](#Installation) 
 2. [Dataset](#Dataset)
 3. [Data Preparation](#Data-Preparation)
+4. [Usage](#Usage)
+    - [Training](#Training)
+    - [Visualize data](#Visualize-data)
+    - [Test](#Test)
+    - [Inference](#Inference)
+5. [Main results](#Main-results)
 
 # Installation
 ### Clone this repository
@@ -31,7 +37,7 @@ Leddar PixSet Dataset is a publicly available dataset containing approximately 2
 
 **Direct Download** from this Google Drive link: [Dataset](https://drive.google.com/file/d/13Pai83qq33uq0tttysR4l-IUvQKHGcix/view?usp=sharing)
 
-### [Optional] Manually generate the dataset
+### [Optional] Manually generate the dataset  (Not available yet)
 
 1. Download the [Leddar PixSet Dataset](https://dataset.leddartech.com/) from the official website.
 2. Extract the dataset in the root directory of the project in data folder.
@@ -46,7 +52,7 @@ Leddar PixSet Dataset is a publicly available dataset containing approximately 2
     GenerateGroundTruthData.py
     ```
 
-## Data Preparation:
+# Data Preparation:
 
 Once the dataset is downloaded and extracted, create a symbolic link to the data directory.
 ```bash
@@ -55,7 +61,7 @@ mkdir -p data
 ln -s $DATASET data/ROSS_Dataset
 ```
 
-## Getting Started: 
+# Usage:
 
 ### Training
 
@@ -70,6 +76,8 @@ To resume a interrupted training session, run the following command:
 python main.py --mode train --config_path $CONFIG_PATH
 ```
 with `$CONFIG_PATH` being the path to the configuration file stored in the experiment [results](Results) folder.
+
+
 
 #### Command lines arguments for training pipeline
 
@@ -102,6 +110,21 @@ python main.py --mode visualize
 - `--GT` (optional, boolean, default: True): Determines whether to visualize ground truth data.
 - `--frame_number` (optional, integer): Specifies the frame number to visualize. If not provided, the entire sequence will be visualized.
 - `--FPS` (optional, integer): Sets the frames per second for the visualization.
+
+![Data_Visualisation.png](Images/Visualized_Data.png) 
+### Test
+To test data and generate graphs, run the following command:
+```bash
+python main.py --mode visualize
+```
+#### Command lines arguments for test pipeline
+- `--config_path` (required, string): Path to the configuration file stored in the experiment results folder.
+- `--model_path` (required, string): Path to the model file.
+- `--label` (optional, string): Path to the output label.
+- `--show_graph` (optional, boolean): If set, displays the sequence graph.
+
+![Grpah.png](Images/Graph.png) 
+
 ### Inference
 
 To inference data, run the following command:
@@ -112,4 +135,8 @@ python main.py --mode inference
 #### Command lines arguments for inference pipeline
 
 - `--config_path` (required, string): Path to the configuration file stored in the experiment [results](Results) folder you want to use for inference.
-- `--data_path` (optional, string): Path to the data to be inferred. Provide a specific`.npy` file, a directory or a sequence name from [data](data) folder. If not provided, a random sequence from the dataset will be used.
+- `--label` (optional, string): Path to the output label.
+- `--sequence` (optional, string): Name of the sequence for inference.
+
+# Main results
+Coming soon...

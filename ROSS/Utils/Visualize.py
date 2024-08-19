@@ -40,6 +40,8 @@ def visualisation_plot(Radar_data_path,Frontal_Image_path,GT_path,fps,GT_point_c
             image = plt.imread(Frontal_Image[i])
             plt.imshow(image)
             plt.title('Frontal Camera Image')
+            # Remove axis
+            plt.axis('off')
             plt.subplot(2, 1, 2)  # 2 rows, 1 column, 2nd plot
             Radar_data = Load_Radar_Data(Radar_File[i], cfg,Mode_Visualisation=True)
             if GT_point_cloud:
@@ -52,6 +54,7 @@ def visualisation_plot(Radar_data_path,Frontal_Image_path,GT_path,fps,GT_point_c
                 plt.scatter(X, Y, c='r', s=4)
                 plt.xlim(-cfg.FOV/2, cfg.FOV/2)
                 plt.ylim(0, cfg.Radar_Range)
+                # add GT legend:
             else:
                 gt_data=Load_GT_Data(GT_File[i], cfg)
                 radar_data, gt_data=adjust_radar_data_based_on_range_and_gt([Radar_data], [gt_data], cfg)
@@ -65,18 +68,26 @@ def visualisation_plot(Radar_data_path,Frontal_Image_path,GT_path,fps,GT_point_c
 
             #plt.xlim(-cfg.FOV/2, cfg.FOV/2)
             #plt.ylim(0, cfg.Radar_Range)
+            plt.legend(['Drivable Area limit'], loc='upper right')
+            plt.xlabel('Angle (°)')
+            plt.ylabel('Range (m)')
 
+            plt.tight_layout()
 
         elif Frontal_Image:
             # Only the camera image is available
             image = plt.imread(Frontal_Image[i])
             plt.imshow(image)
             plt.title('Frontal Camera Image')
+            plt.axis('off')
         elif Radar_File:
             # Only the radar data is available
             Radar_data = Load_Radar_Data(Radar_File[i], cfg)
             plt.imshow(Radar_data, extent=[-60, 60, 0, 50])
             plt.title('Radar Data')
+            plt.legend(['Drivable Area limit'], loc='upper right')
+            plt.xlabel('Angle (°)')
+            plt.ylabel('Range (m)')
 
         plt.pause(1/fps)
         plt.clf()

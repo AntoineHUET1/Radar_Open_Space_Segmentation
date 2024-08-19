@@ -10,7 +10,7 @@ def main():
     # Create the parser
     parser = argparse.ArgumentParser(description='Train the ROSS model.')
 
-    parser.add_argument('--mode', type=str, required=True, choices=['train', 'visualize','test','inference'],
+    parser.add_argument('--mode', type=str, choices=['train', 'visualize','test','inference'],
                         help='Mode to run: train, visualize, or inference')
 
     # Global arguments
@@ -40,7 +40,7 @@ def main():
 
     # Inference arguments
     parser.add_argument('--data', type=str, help='Path to the data file')
-
+    #/home/watercooledmt/PycharmProjects/Radar_Open_Space_Segmentation/data/ROSS_Dataset/20200610_185206_part1_5095_5195
     # Parse the arguments
     args = parser.parse_args()
 
@@ -97,7 +97,7 @@ def main():
             raise ValueError('Please provide a model path')
         if args.label is None and args.sequence is None and args.data is None:
             raise ValueError('Please provide a sequence name a label or a data path')
-        inference(args.config_path,label=args.label)
+        inference(args.config_path,label=args.label,sequence=args.sequence,data=args.data)
 
 if __name__ == '__main__':
     main()

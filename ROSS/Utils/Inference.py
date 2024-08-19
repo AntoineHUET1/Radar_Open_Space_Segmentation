@@ -1,10 +1,11 @@
-from ROSS.Utils import genrerat_Graph, Generate_Data,prediction
+from ROSS.Utils import genrerat_Graph, Generate_Data, prediction
 import importlib.util
 import os
 from ..Model.Model_ROSS import build_ROSS_32_50
 import time
-def inference(config_path,label=None,):
 
+
+def inference(config_path, label=None, sequence=None, data=None):
     # ============ Load the configuration file ============
     spec = importlib.util.spec_from_file_location("cfg", config_path)
     cfg = importlib.util.module_from_spec(spec)
@@ -27,7 +28,7 @@ def inference(config_path,label=None,):
     if cfg.Remove_bad_sequences:
         Sequence_List = [seq for seq in Sequence_List if seq not in cfg.Bad_sequences]
 
-    if label in ['test','train','val']:
+    if label in ['test', 'train', 'val']:
 
         # Test, Train, Validation split:
         Number_of_files = len(Sequence_List)
@@ -38,7 +39,6 @@ def inference(config_path,label=None,):
         Train_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[:Train_files]]
         Val_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files:Train_files + Val_files]]
         Test_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files + Val_files:]]
-
 
         # ============ generate the data with graphs ============
         if label == 'train':
@@ -57,19 +57,18 @@ def inference(config_path,label=None,):
             Sequence_List = [cfg.Data_path + seq for seq in Sequence_List]
             Data, _ = Generate_Data(cfg, Sequence_List)
         else:
-            Data, _ = Generate_Data(cfg, [cfg.Data_path + label])
+            Data, _ = Generate_Data(cfg, [cfg.Data_path + '/' + sequence])
 
     start = time.time()
-    prediction(Data,model,cfg)
+    prediction(Data, model, cfg)
     end = time.time()
     print(f'{end - start:.1f}) seconds')
 
     # Calculate the number of frames per second
 
-    Nb_frames=0
+    Nb_frames = 0
     for Radar, GT in Data:
         for i in range(Radar.shape[0]):
-            Nb_frames+=1
+            Nb_frames += 1
 
-    print(f'FPS: {Nb_frames/(end-start):.1f}')
-
+    print(f'FPS: {Nb_frames / (end - start):.1f}')
