@@ -123,7 +123,7 @@ python main.py --mode visualize
 - `--label` (optional, string): Path to the output label.
 - `--show_graph` (optional, boolean): If set, displays the sequence graph.
 
-![Grpah.png](Images/Graph.png) 
+![Grpah.png](Images/Graph_V2.png) 
 
 ### Inference
 
