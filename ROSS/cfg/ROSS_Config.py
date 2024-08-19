@@ -31,7 +31,7 @@ if Radar_Range <= 25:
 Merge_Radar_images = 1  # 0: No, 1: Yes
 
 # ROSS FOV
-FOV = 90  # 0: 120, 1: 90
+FOV = 120  # 0: 120, 1: 90
 
 # Have GT data:
 GT_mode = 1  # 0: All Data, 1: Only obstacles in range

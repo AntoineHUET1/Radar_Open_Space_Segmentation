@@ -42,6 +42,7 @@ Leddar PixSet Dataset is a publicly available dataset containing approximately 2
     ```
 3. Run the following script to generate ground truth data:
     ```bash
+    # Not available yet
     GenerateGroundTruthData.py
     ```
 
@@ -96,11 +97,11 @@ python main.py --mode visualize
 #### Command lines arguments for visualization pipeline
 
 - `--sequence` (optional, string): Name of the sequence to visualize. If not provided, a random sequence from the dataset will be used.
-- `--Radar` (optional, boolean, default: True): Determines whether to visualize radar data. 
-- `--FrontCamera` (optional, boolean, default: True): Determines whether to visualize front camera data.
+- `--radar` (optional, boolean, default: True): Determines whether to visualize radar data. 
+- `--camera` (optional, boolean, default: True): Determines whether to visualize front camera data.
 - `--GT` (optional, boolean, default: True): Determines whether to visualize ground truth data.
-- `--Frame` (optional, integer): Specifies the frame number to visualize. If not provided, the entire sequence will be visualized.
-
+- `--frame_number` (optional, integer): Specifies the frame number to visualize. If not provided, the entire sequence will be visualized.
+- `--FPS` (optional, integer): Sets the frames per second for the visualization.
 ### Inference
 
 To inference data, run the following command:
@@ -111,4 +112,4 @@ python main.py --mode inference
 #### Command lines arguments for inference pipeline
 
 - `--config_path` (required, string): Path to the configuration file stored in the experiment [results](Results) folder you want to use for inference.
-- `--DataPath` (optional, string): Path to the data to be inferred. Provide a specific`.npy` file, a directory or a sequence path from [data](data) folder. If not provided, a random sequence from the dataset will be used.
+- `--data_path` (optional, string): Path to the data to be inferred. Provide a specific`.npy` file, a directory or a sequence name from [data](data) folder. If not provided, a random sequence from the dataset will be used.

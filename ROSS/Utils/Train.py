@@ -8,19 +8,12 @@ import json
 
 def train_model(cfg, config_Path=None):
 
-    # ==================== Change Working Directory ====================
-
-    # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Change the working directory to the script's directory
-    os.chdir(script_dir)
-
     # Filter out specific TensorFlow warnings
     warnings.filterwarnings("ignore", message="TF-TRT Warning")
 
     # ==================== Set Up Data ====================
 
+    # print(
     # List files in the ROSS_Dataset directory
     Sequence_List = os.listdir(cfg.Data_path)
 
@@ -73,7 +66,7 @@ def train_model(cfg, config_Path=None):
         # Create Experience i directory inside run_dir
         Existing_Experiences = os.listdir(run_dir)
         Experience_number = len(Existing_Experiences) + 1
-        run_dir = run_dir + f'/Experience_{Experience_number}'
+        run_dir = run_dir + f'Experience_{Experience_number}'
         if not os.path.exists(run_dir):
             os.makedirs(run_dir)
 
@@ -88,8 +81,10 @@ def train_model(cfg, config_Path=None):
 
     # ============== Generate training data ==============
 
-    train_dataloader, train_dataloader_length, val_dataloader, val_dataloader_length, test_dataloader, test_dataloader_length = Generate_Data(
-        cfg, Train_sequence_paths, Val_sequence_paths, Test_sequence_paths)
+    train_dataloader, train_dataloader_length = Generate_Data(cfg, Train_sequence_paths)
+    val_dataloader, val_dataloader_length = Generate_Data(cfg, Val_sequence_paths)
+    test_dataloader, test_dataloader_length = Generate_Data(cfg, Test_sequence_paths)
+
 
     # ============== Build model ==============
 
@@ -111,7 +106,7 @@ def train_model(cfg, config_Path=None):
     checkpoint_path = run_dir + "/best_model_weights.weights.h5"
 
     # Generate graph:
-    genrerat_Graph(checkpoint_path, test_dataloader, cfg, label='test', Save_fig=True)
-    genrerat_Graph(checkpoint_path, train_dataloader, cfg, label='train', Save_fig=True)
-    genrerat_Graph(checkpoint_path, val_dataloader, cfg, label='val', Save_fig=True)
+    genrerat_Graph(checkpoint_path, test_dataloader, cfg, label='test', Save_fig=True,Show_fig=True)
+    genrerat_Graph(checkpoint_path, train_dataloader, cfg, label='train', Save_fig=True,Show_fig=True)
+    genrerat_Graph(checkpoint_path, val_dataloader, cfg, label='val', Save_fig=True,Show_fig=True)
 

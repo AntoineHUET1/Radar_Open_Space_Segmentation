@@ -10,8 +10,8 @@ import json
 from scipy.interpolate import RegularGridInterpolator
 from scipy.interpolate import LinearNDInterpolator
 
-def Load_Radar_Data(radar_path, cfg):
-    if cfg.Merge_Radar_images == 1:
+def Load_Radar_Data(radar_path, cfg,Mode_Visualisation=False):
+    if cfg.Merge_Radar_images == 1 and not Mode_Visualisation:
         data_arrays = []
         for file in radar_path:
             data_arrays.append(np.load(file))
@@ -86,6 +86,93 @@ def Load_GT_Data(gt_path, cfg):
     GT = np.stack((Have_GT, GT_Output_data), axis=1)
     return GT
 
+def adjust_radar_data_based_on_range_and_gt(radar_data, gt_data, cfg):
+    if cfg.Radar_Range not in [25, 50]:
+
+        if cfg.Radar_Range > 25:
+            Factor = 50
+        else:
+            Factor = 25
+
+        # Original dimensions
+        real_x_dim = int(cfg.Radar_Range * radar_data[0].shape[0] / Factor)
+        # Original grid dimensions
+        x_dim = np.linspace(0, real_x_dim - 1, real_x_dim)
+        y_dim = np.linspace(0, radar_data[0].shape[1] - 1, radar_data[0].shape[1])
+
+        # Desired new grid dimensions
+        new_x_dim = np.linspace(0, real_x_dim - 1, radar_data[0].shape[0])
+        new_y_dim = np.linspace(0, radar_data[0].shape[1] - 1, radar_data[0].shape[1])
+
+        for index, Radar_Data in enumerate(radar_data):
+            # Interpolating
+            Radar_Data = Radar_Data[Radar_Data.shape[0] - real_x_dim:Radar_Data.shape[0], :]
+
+            # Squeeze the last dimension for interpolation, keeping the (x, y) shape
+            Radar_Data_squeezed = Radar_Data.squeeze()
+
+            # Create the interpolator function
+            interp_func = RegularGridInterpolator((x_dim, y_dim), Radar_Data_squeezed, method='linear')
+
+            # Generate a meshgrid for the new dimensions
+            new_x_grid, new_y_grid = np.meshgrid(new_x_dim, new_y_dim, indexing='ij')
+
+            # Interpolate over the new grid
+            new_radar_data = interp_func((new_x_grid, new_y_grid))
+
+            # Add the third dimension back
+            new_radar_data = new_radar_data[..., np.newaxis]  # shape becomes (new_x, new_y, 1)
+            radar_data[index] = new_radar_data
+
+    if cfg.GT_mode == 1:
+        radar_data = [radar for radar, gt in zip(radar_data, gt_data) if np.any(gt[:, 0] == 1)]
+        gt_data = [gt for gt in gt_data if np.any(gt[:, 0] == 1)]
+
+    return radar_data, gt_data
+
+def prediction(Data,model,cfg):
+    # ==================== Visualize data ====================
+
+    Pred_Full = []
+    GT_Full = []
+    Pred_val_Full = []
+
+    for Radar, GT in Data:
+        # Predict
+        Predictions = model.predict(Radar)
+
+        Predictions_index = Predictions.argmax(axis=-1)
+
+        # Get the value of the argmax
+        Predictions_Val = Predictions.max(axis=-1)
+
+        Predictions_index = Predictions_index.reshape(Radar.shape[0], cfg.GT_Output_shape[0], 1)
+
+        Predictions_Val = Predictions_Val.reshape(Radar.shape[0], cfg.GT_Output_shape[0], 1)
+
+        for i in range(Radar.shape[0]):
+            if cfg.GT_mode == 0:
+                Pred_Full.append(Predictions_index[i])
+                GT_Full.append(GT[i][:, 1])
+                Pred_val_Full.append(Predictions_Val[i])
+
+            else:
+
+                have_target, pos = GT[i][:, 0], GT[i][:, 1]
+                mask = tf.cast(have_target, dtype=tf.bool)
+
+                masked_true_values = tf.where(mask, pos, np.nan).numpy()
+                masked_pred_values = Predictions_index[i].astype(float)
+                masked_pred_values[~mask] = np.nan
+                masked_pred_val = Predictions_Val[i]
+                masked_pred_val[~mask] = np.nan
+
+                # Append the masked values to the lists
+                Pred_Full.append(masked_pred_values)
+                GT_Full.append(masked_true_values)
+                Pred_val_Full.append(masked_pred_val)
+
+    return Pred_Full, GT_Full, Pred_val_Full
 
 def load_sequence_data(sequence_path,cfg):
     # data path
@@ -120,48 +207,8 @@ def load_sequence_data(sequence_path,cfg):
         radar_data = [Load_Radar_Data(os.path.join(radar_data_path, file), cfg) for file in radar_data_files]
         gt_data = [Load_GT_Data(os.path.join(gt_path, file), cfg) for file in gt_files]
 
-    if cfg.Radar_Range not in [25, 50]:
-
-        if cfg.Radar_Range > 25:
-            Factor=50
-        else:
-            Factor=25
-
-        # Original dimensions
-        real_x_dim = int(cfg.Radar_Range * radar_data[0].shape[0] / Factor)
-        # Original grid dimensions
-        x_dim = np.linspace(0, real_x_dim - 1, real_x_dim)
-        y_dim = np.linspace(0, radar_data[0].shape[1] - 1, radar_data[0].shape[1])
-
-        # Desired new grid dimensions
-        new_x_dim = np.linspace(0, real_x_dim - 1, radar_data[0].shape[0])
-        new_y_dim = np.linspace(0, radar_data[0].shape[1] - 1, radar_data[0].shape[1])
-
-
-        for index, Radar_Data in enumerate(radar_data):
-            # Interpolating
-            Radar_Data = Radar_Data[Radar_Data.shape[0] - real_x_dim:Radar_Data.shape[0], :]
-
-            # Squeeze the last dimension for interpolation, keeping the (x, y) shape
-            Radar_Data_squeezed = Radar_Data.squeeze()
-
-            # Create the interpolator function
-            interp_func = RegularGridInterpolator((x_dim, y_dim), Radar_Data_squeezed, method='linear')
-
-            # Generate a meshgrid for the new dimensions
-            new_x_grid, new_y_grid = np.meshgrid(new_x_dim, new_y_dim, indexing='ij')
-
-            # Interpolate over the new grid
-            new_radar_data = interp_func((new_x_grid, new_y_grid))
-
-            # Add the third dimension back
-            new_radar_data = new_radar_data[..., np.newaxis]  # shape becomes (new_x, new_y, 1)
-            radar_data[index] = new_radar_data
-
-    # if GT_mode == 1 and GT = only out of range obstacles then remove data:
-    if cfg.GT_mode == 1:
-        radar_data = [radar for radar, gt in zip(radar_data, gt_data) if np.any(gt[:, 0] == 1)]
-        gt_data = [gt for gt in gt_data if np.any(gt[:, 0] == 1)]
+    # Call the refactored function
+    radar_data, gt_data = adjust_radar_data_based_on_range_and_gt(radar_data, gt_data, cfg)
 
     return radar_data, gt_data
 
@@ -202,11 +249,9 @@ def create_dataloader(sequence_paths,cfg):
 
     return dataset, dataloader_length
 
-def Generate_Data(cfg, Train_sequence_paths, Val_sequence_paths, Test_sequence_paths):
-    train_dataloader, train_dataloader_length = create_dataloader(Train_sequence_paths, cfg)
-    val_dataloader, val_dataloader_length = create_dataloader(Val_sequence_paths, cfg)
-    test_dataloader, test_dataloader_length = create_dataloader(Test_sequence_paths, cfg)
-    return train_dataloader, train_dataloader_length, val_dataloader, val_dataloader_length, test_dataloader, test_dataloader_length
+def Generate_Data(cfg, sequence_paths):
+    dataloader, dataloader_length = create_dataloader(sequence_paths, cfg)
+    return dataloader, dataloader_length
 
 def serialize_cache(cache):
     # Convert dictionary keys to strings
