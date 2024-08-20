@@ -9,7 +9,7 @@ GT_Output_shape = (32, 2)
 input_shape = (256, 256, 1)
 
 # List files in the ROSS_Dataset directory
-Data_path = './data/ROSS_Dataset/'
+Data_path = '/data/ROSS_Dataset/'
 
 # Remove bad sequences:
 Remove_bad_sequences = False
@@ -53,7 +53,7 @@ Night = ['20200730_003948_part44_2995_3195','20200730_003948_part44_5818_6095','
 Rain = ['20200803_151243_part45_1028_1128','20200803_151243_part45_2310_2560']
 
 # Cache data to save time:
-CACHE_FILE = './data/cache.json'
+CACHE_FILE = '/data/cache.json'
 
-config_Path='./ROSS/cfg/ROSS_Config.py'
+config_Path='/ROSS/cfg/ROSS_Config.py'
 

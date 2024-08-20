@@ -22,10 +22,31 @@ ROSS is a deep convolutional neural network designed to process raw radar data f
 ### Clone this repository
 ```bash
 git clone https://github.com/AntoineHUET1/Radar_Open_Space_Segmentation.git
+cd Radar_Open_Space_Segmentation
 ```
-To install the package, run the following command::
+
+### Prerequisites 
+
+1) You installed  [Nvidia Container Toolkit ](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) from the official website.
+2) You installed [Docker](https://docs.docker.com/get-docker/) from the official website.
+
+
+**Build and Run the Docker Container**
+
 ```bash
-pip install -r requirements.txt
+sudo docker compose build
+sudo docker compose up -d
+```
+**Access the Running Container**
+
+```
+sudo docker ps  # List running containers to get the container ID
+docker exec -it <container_id> /bin/sh
+```
+
+Verify GPU Access
+```
+python gpu_test.py
 ```
 # Dataset
 

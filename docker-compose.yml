@@ -1,0 +1,16 @@
+services:
+  ross:
+    build: .
+    volumes:
+      - ./Results:/Results  # Map the 'Results' directory on the host to '/Results' in the container
+      - ./data/ROSS_Dataset:/data/ROSS_Dataset  # Map the 'data/ROSS_Dataset' directory on the host to 'data/ROSS_Dataset' in the container
+    stdin_open: true
+    tty: true
+    command: sh
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    container_name: ross
+    runtime: nvidia
