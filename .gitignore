@@ -4,6 +4,8 @@
 /Results/
 # Ignore all files in Visualization directories
 /Visualization/
+# remove ./idea from git
+.idea/
 
 # Ignore Test Files
 Test.py
