@@ -115,7 +115,7 @@ python main.py --mode visualize
 ### Test
 To test data and generate graphs, run the following command:
 ```bash
-python main.py --mode visualize
+python main.py --mode test
 ```
 #### Command lines arguments for test pipeline
 - `--config_path` (required, string): Path to the configuration file stored in the experiment results folder.

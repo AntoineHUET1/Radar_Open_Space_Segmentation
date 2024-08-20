@@ -31,7 +31,8 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
     colors = [(204, 51, 51), (255, 106, 0), (255, 204, 0), (212, 255, 0), (122, 221, 122)]
 
     Distance_treshold = [i * cfg.Radar_Range / 5 for i in range(1, 6)]
-
+    print('Distance_treshold',Distance_treshold)
+    breakpoint()
     directory_path = os.path.dirname(checkpoint_path)
 
     # Create the graph directory if it does not exist:
@@ -106,7 +107,7 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
             list_mae.append(round(mae, 2))
 
             # Define bins
-            bins = np.arange(-cfg.Radar_Range, cfg.Radar_Range, cfg.Radar_Range/50)
+            bins = np.arange(-cfg.Radar_Range, cfg.Radar_Range + cfg.Radar_Range/50, cfg.Radar_Range/50)
 
             # Create histogram
             hist, bins = np.histogram(error_values, bins=bins)
@@ -119,7 +120,7 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
             color = [c / 255 for c in colors[i]]
 
             # Plot histogram with percentage
-            plt.bar(bins[:-1], percentage, width=1, color=color, label=f'P>{Threshold}')
+            plt.bar(bins[:-1], percentage, width=(bins[1] - bins[0]), color=color, label=f'P>{Threshold}')
 
         # Customize labels and title
         plt.xlabel('Error Values (m)', fontsize=Fontsize)
@@ -182,6 +183,7 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
             if len(keep) == 0:
                 mae_list.append(np.nan)
                 median_list.append(np.nan)
+                list_Percentage_Perfect.append(np.nan)
                 continue
 
             # Calculate the MAE
@@ -195,6 +197,7 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
             # Calculate the percentage of perfect predictions
             percentage_perfect = len(np.where(np.abs(list_Pred[keep] - list_GT[keep]) < 0.5)[0]) / len(keep)
             percentage_perfect = f'{round(100 * percentage_perfect, 2)}%'
+            print('percentage_perfect',percentage_perfect)
             list_Percentage_Perfect.append(percentage_perfect)
 
         # Create bar plot
