@@ -27,8 +27,8 @@ cd Radar_Open_Space_Segmentation
 
 ### Prerequisites 
 
-1) You installed  [Nvidia Container Toolkit ](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) from the official website.
-2) You installed [Docker](https://docs.docker.com/get-docker/) from the official website.
+1) You installed [Docker](https://docs.docker.com/get-docker/) from the official website.
+2) You installed  [Nvidia Container Toolkit ](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) from the official website.
 
 
 **Build and Run the Docker Container**
@@ -44,7 +44,7 @@ sudo docker ps  # List running containers to get the container ID
 docker exec -it <container_id> /bin/sh
 ```
 
-Verify GPU Access
+**Verify GPU Access**
 ```
 python gpu_test.py
 ```
