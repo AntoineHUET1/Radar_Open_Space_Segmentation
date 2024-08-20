@@ -80,7 +80,7 @@ def main():
         train_model(cfg, args.config_path)
 
     elif args.mode == 'visualize':
-        visualize_data(args.sequence,args.no_camera,args.no_radar,args.no_GT,args.frame_number,args.fps,args.GT_point_cloud)
+        visualize_data(cfg,args.sequence,args.no_camera,args.no_radar,args.no_GT,args.frame_number,args.fps,args.GT_point_cloud)
 
     elif args.mode == 'test':
         # if no model path then return error:

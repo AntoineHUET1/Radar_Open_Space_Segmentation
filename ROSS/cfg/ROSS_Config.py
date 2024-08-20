@@ -9,7 +9,7 @@ GT_Output_shape = (32, 2)
 input_shape = (256, 256, 1)
 
 # List files in the ROSS_Dataset directory
-Data_path = '/data/ROSS_Dataset/'
+Data_path = './data/ROSS_Dataset/'
 
 # Remove bad sequences:
 Remove_bad_sequences = False
@@ -41,19 +41,20 @@ num_epochs = 100
 patience = 10  # Number of epochs to wait for improvement
 
 # Hyperparameters:
-HP_BATCH_SIZE = 16 # [32, 64, 128]
+HP_BATCH_SIZE = 16  # [32, 64, 128]
 HP_DROPOUT = 0.2  # [0.1, 0.2, 0.3, 0.5]
 HP_LR = 1e-5  # [1e-3, 1e-4, 1e-5]
 
 # Test sequences:
-Easy = ['20200706_202209_part31_2636_2746' , '20200610_185206_part1_5095_5195']
-Medium = ['20200616_151155_part9_750_900','20200615_184724_part6_5180_5280']
-Hard = ['20200706_162218_part21_790_960','20200622_142945_part19_480_700' , '20200615_184724_part6_5180_5280']
-Night = ['20200730_003948_part44_2995_3195','20200730_003948_part44_5818_6095','20200730_003948_part44_6875_7500']
-Rain = ['20200803_151243_part45_1028_1128','20200803_151243_part45_2310_2560']
+Easy = ['20200706_202209_part31_2636_2746', '20200610_185206_part1_5095_5195']
+Medium = ['20200616_151155_part9_750_900', '20200615_184724_part6_5180_5280']
+Hard = ['20200706_162218_part21_790_960', '20200622_142945_part19_480_700', '20200615_184724_part6_5180_5280']
+Night = ['20200730_003948_part44_2995_3195', '20200730_003948_part44_5818_6095', '20200730_003948_part44_6875_7500']
+Rain = ['20200803_151243_part45_1028_1128', '20200803_151243_part45_2310_2560']
 
 # Cache data to save time:
-CACHE_FILE = '/data/cache.json'
+CACHE_FILE = './data/cache.json'
 
-config_Path='/ROSS/cfg/ROSS_Config.py'
+config_Path = './ROSS/cfg/ROSS_Config.py'
 
+Visualization_Path = './Visualization/'

@@ -62,8 +62,8 @@ def visualisation_plot(Radar_data_path,Frontal_Image_path,GT_path,fps,GT_point_c
                 plt.title('Radar Data')
 
                 GT=gt_data[0][:,1]
-                for i in range(cfg.GT_Output_shape[0]):
-                   plt.plot([i * cfg.FOV / (cfg.GT_Output_shape[0] + 1) - cfg.FOV/2, (i + 1) * cfg.FOV / (cfg.GT_Output_shape[0] + 1) - cfg.FOV/2],[GT[i]*cfg.Radar_Range/50, GT[i]*cfg.Radar_Range/50], c='r')
+                for j in range(cfg.GT_Output_shape[0]):
+                   plt.plot([j * cfg.FOV / (cfg.GT_Output_shape[0] + 1) - cfg.FOV/2, (j + 1) * cfg.FOV / (cfg.GT_Output_shape[0] + 1) - cfg.FOV/2],[GT[j]*cfg.Radar_Range/50, GT[j]*cfg.Radar_Range/50], c='r')
 
 
             #plt.xlim(-cfg.FOV/2, cfg.FOV/2)
@@ -89,15 +89,17 @@ def visualisation_plot(Radar_data_path,Frontal_Image_path,GT_path,fps,GT_point_c
             plt.xlabel('Angle (°)')
             plt.ylabel('Range (m)')
 
-        plt.pause(1/fps)
+        #plt.pause(1/fps)
+        plt.savefig(cfg.Visualization_Path + 'Frame_' + str(i) + '.png')
+        print('Frame ' + str(i) + ' processed')
         plt.clf()
 
 
 
-def visualize_data(Sequence=None,No_Frontal_Camera_files=False,No_Radar_files=False,No_GT_files=False,Frame_Number=None,fps=10,GT_point_cloud=False):
+def visualize_data(cfg,Sequence=None,No_Frontal_Camera_files=False,No_Radar_files=False,No_GT_files=False,Frame_Number=None,fps=10,GT_point_cloud=False):
 
     # Parameters:
-    Data_path = 'data/ROSS_Dataset'
+    Data_path = cfg.Data_path
     Radar_data_path = None
     GT_path = None
     Frontal_Image_path = None

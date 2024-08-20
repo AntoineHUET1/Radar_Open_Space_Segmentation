@@ -1,7 +1,9 @@
-# Ignore all files in data and Results directories
+# Ignore all files in data  directories
 /data/
-# Ignore all files in data and Results directories
+# Ignore all files in Results directories
 /Results/
+# Ignore all files in Visualization directories
+/Visualization/
 
 # Ignore Test Files
 Test.py

@@ -118,6 +118,10 @@ with `$CONFIG_PATH` being the path to the configuration file stored in the exper
 
 ### Visualize data
 
+Since we run inside a docker container without a display, we need to use a remote folder to save the data:
+```bash
+mkdir -p ./Visualization
+```
 To visualize data, run the following command:
 ```bash
 python main.py --mode visualize
@@ -131,6 +135,7 @@ python main.py --mode visualize
 - `--GT` (optional, boolean, default: True): Determines whether to visualize ground truth data.
 - `--frame_number` (optional, integer): Specifies the frame number to visualize. If not provided, the entire sequence will be visualized.
 - `--FPS` (optional, integer): Sets the frames per second for the visualization.
+- `--GT_point_cloud`: (optional) 'To visualize the GT point cloud instead of stixels'
 
 ![Data_Visualisation.png](Images/Visualized_Data.png) 
 ### Test
