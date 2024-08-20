@@ -106,7 +106,7 @@ def train_model(cfg, config_Path=None):
     checkpoint_path = run_dir + "/best_model_weights.weights.h5"
 
     # Generate graph:
-    genrerat_Graph(checkpoint_path, test_dataloader, cfg, label='test', Save_fig=True,Show_fig=True)
-    genrerat_Graph(checkpoint_path, train_dataloader, cfg, label='train', Save_fig=True,Show_fig=True)
-    genrerat_Graph(checkpoint_path, val_dataloader, cfg, label='val', Save_fig=True,Show_fig=True)
+    genrerat_Graph(checkpoint_path, test_dataloader, cfg, label='test', Save_fig=True,Show_fig=False)
+    genrerat_Graph(checkpoint_path, train_dataloader, cfg, label='train', Save_fig=True,Show_fig=False)
+    genrerat_Graph(checkpoint_path, val_dataloader, cfg, label='val', Save_fig=True,Show_fig=False)
 

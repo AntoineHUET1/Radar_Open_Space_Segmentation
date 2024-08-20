@@ -6,3 +6,5 @@
 # Ignore Test Files
 Test.py
 
+.dockerignore
+.gitignore
