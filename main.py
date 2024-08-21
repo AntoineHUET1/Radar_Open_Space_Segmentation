@@ -101,3 +101,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# /home/watercooledmt/PycharmProjects/Radar_Open_Space_Segmentation/Results/Radar/25m/Experience_1/config.py

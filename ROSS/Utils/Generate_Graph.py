@@ -8,6 +8,7 @@ from scipy import stats
 import platform
 import subprocess
 from .Data_Loaders import prediction
+
 def open_images(image_paths):
     for image_path in image_paths:
         # Normalize the path to handle different OS
@@ -22,6 +23,30 @@ def open_images(image_paths):
             subprocess.run(['xdg-open', image_path])
         else:
             raise OSError('Unsupported operating system.')
+
+def calculate_iou(box1, box2):
+    x1 = 0
+    y1 = 0
+    x2 = 0
+    y2 = 0
+    w1 = 3.75
+    w2 = 3.75
+    h1 = box1
+    h2 = box2
+    intersect_x = max(x1, x2)
+    intersect_y = max(y1, y2)
+    intersect_w = min(x1 + w1, x2 + w2) - intersect_x
+    intersect_h = min(y1 + h1, y2 + h2) - intersect_y
+
+    if intersect_w <= 0 or intersect_h <= 0:
+        return 0.0
+
+    intersect_area = intersect_w * intersect_h
+    box1_area = w1 * h1
+    box2_area = w2 * h2
+    iou = intersect_area / (box1_area + box2_area - intersect_area)
+
+    return iou
 
 def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=False):
 
@@ -87,6 +112,14 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
         list_GT = [item[0] * Factor for item in flattened_list_GT if not np.isnan(item[0])]
         list_Pred_val = [item[0] for item in flattened_list_Pred_val if not np.isnan(item[0])]
 
+        IOU = []
+        for j in range(len(list_GT)):
+            IOU.append(calculate_iou(list_GT[j], list_Pred[j]))
+
+        # Calculate average IoU
+        average_iou = np.mean(IOU)
+
+
         plt.figure(figsize=(20, 10))
         # Iterate over each threshold
 
@@ -106,7 +139,7 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
             list_mae.append(round(mae, 2))
 
             # Define bins
-            bins = np.arange(-cfg.Radar_Range, cfg.Radar_Range, cfg.Radar_Range/50)
+            bins = np.arange(-cfg.Radar_Range, cfg.Radar_Range + cfg.Radar_Range/50, cfg.Radar_Range/50)
 
             # Create histogram
             hist, bins = np.histogram(error_values, bins=bins)
@@ -119,12 +152,14 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
             color = [c / 255 for c in colors[i]]
 
             # Plot histogram with percentage
-            plt.bar(bins[:-1], percentage, width=1, color=color, label=f'P>{Threshold}')
+            plt.bar(bins[:-1], percentage, width=(bins[1] - bins[0]), color=color, label=f'P>{Threshold}')
+
 
         # Customize labels and title
         plt.xlabel('Error Values (m)', fontsize=Fontsize)
         plt.ylabel('Percentage', fontsize=Fontsize)
-        plt.title('Distribution of Error Values (%) for ' + label + ' data', fontsize=1.5 * Fontsize)
+        plt.title(f'Distribution of Error Values (%) for {label} data\nAverage IoU: {average_iou:.2f}',
+                  fontsize=1.5 * Fontsize)
 
         plt.legend()
 
@@ -182,6 +217,7 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
             if len(keep) == 0:
                 mae_list.append(np.nan)
                 median_list.append(np.nan)
+                list_Percentage_Perfect.append('no data')
                 continue
 
             # Calculate the MAE
@@ -273,4 +309,3 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
                      save_path + '/Prediction_confidence_level_MAE.png',
                      save_path + '/Error_relative_to_distance.png',
                      save_path + '/Error_relative_to_angle.png'])
-

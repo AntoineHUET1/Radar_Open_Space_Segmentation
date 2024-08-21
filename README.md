@@ -141,7 +141,7 @@ python main.py --mode visualize
 ### Test
 To test data and generate graphs, run the following command:
 ```bash
-python main.py --mode visualize
+python main.py --mode test
 ```
 #### Command lines arguments for test pipeline
 - `--config_path` (required, string): Path to the configuration file stored in the experiment results folder.
@@ -165,4 +165,30 @@ python main.py --mode inference
 - `--sequence` (optional, string): Name of the sequence for inference.
 
 # Main results
-Coming soon...
+
+Training results for different radar ranges are available in the following Google Drive links:
+
+### Mode 1: Use only data where obstacles are within the radar's range
+
+| Distance | Mean absolute error | Median | IOU  | Checkpoint + config                                                                                         |
+|----------|---------------------|--------|------|-------------------------------------------------------------------------------------------------------------|
+| 5 m      | 0.25 m              | 0.2 m  | 0.94 | [Training results](https://drive.google.com/drive/folders/15WR1xnUD40JvMkl29fUR2pmjs-LqOHiy?usp=sharing)    |
+| 10 m     | 0.67 m              | 0.2 m  | 0.91 | [Training results](https://drive.google.com/drive/folders/1dIwhLlzFrszEJO8wTMesm_TOUXmI6Jff?usp=sharing)    |
+| 15 m     | 1.29 m              | 0.3 m  | 0.87 | [Training results](https://drive.google.com/drive/folders/1ta8wviUKuF2xOcOhcgXYBeS-fRNvRp4f?usp=sharing)    |
+| 20 m     | 1.63 m              | 0.4 m  | 0.87 | [Training results](https://drive.google.com/drive/folders/144mVMFSyxSB8j3E4MxBpNpFd9aDX-55V?usp=sharing)    |
+| 25 m     | 2.18 m              | 0.5 m  | 0.85 | [Training results](https://drive.google.com/drive/folders/167ngWHshGN8lOevZy5N9w2y38s5Kcd5L?usp=drive_link) |
+| 30 m     | 2.48 m              | 0.6 m  | 0.84 | [Training results](https://drive.google.com/drive/folders/1m1LQl7VuLAcfyBZUsYoGe-PnmD6UGAjE?usp=drive_link) |
+| 35 m     | 2.72 m              | 0.7 m  | 0.84 | [Training results](https://drive.google.com/drive/folders/1OVX6p4GI6E4GgyuXgtYZNkUG9r67QLP7?usp=sharing)    |
+| 40 m     | 3.04 m              | 0.8 m  | 0.83 | [Training results](https://drive.google.com/drive/folders/1Lyzrv4ky1ykm1otWnDAMV7McxGnV1weK?usp=sharing)    |
+| 45 m     | 3.12 m              | 0.9 m  | 0.83 | [Training results](https://drive.google.com/drive/folders/1yaKRx9BYs_jqu_fniBpkamdWD3cNdf9D?usp=drive_link) |
+| 50 m     | 4.95 m              | 1 m    | 0.79 | [Training results](https://drive.google.com/drive/folders/17QfnVT3C4lG0N-K5k6uLMNkR-pCHopfu?usp=drive_link) |
+
+### Mode 2: Use all available data for training and evaluation
+
+| Distance | Mean absolute error | Median | IOU  | Checkpoint + config                                                                                         |
+|----------|---------------------|--------|------|-------------------------------------------------------------------------------------------------------------|
+| 25 m     | 3.16 m              | 1 m    | 0.82 | [Training results](https://drive.google.com/drive/folders/1DX4a7a1lopVGg-jSDEVSstfCq4Wg-lZk?usp=drive_link) |
+| 30 m     | 3.65 m              | 1.2 m  | 0.81 | [Training results](https://drive.google.com/drive/folders/1R7vHZuVFn_vKYZOsjDbZts9CiIq7Fazz?usp=drive_link) |
+| 35 m     | 3.98 m              | 1.4 m  | 0.81 | [Training results](https://drive.google.com/drive/folders/1H5EMNfzCIOImVDcn1nD21pDJD8h_NtuJ?usp=drive_link) |
+| 40 m     | 5.05 m              | 1.6 m  | 0.77 | [Training results](https://drive.google.com/drive/folders/1B_4E6bHgDJAjFZq4vf26I2PDgGOtRfqM?usp=drive_link) |
+
