@@ -6,7 +6,7 @@ import warnings
 import ROSS.cfg.ROSS_Config as cfg
 import json
 
-def train_model(cfg, config_Path=None):
+def train_model(cfg, config_Path=None,random_split=False):
 
     # Filter out specific TensorFlow warnings
     warnings.filterwarnings("ignore", message="TF-TRT Warning")
@@ -21,15 +21,27 @@ def train_model(cfg, config_Path=None):
     if cfg.Remove_bad_sequences:
         Sequence_List = [seq for seq in Sequence_List if seq not in cfg.Bad_sequences]
 
-    # Test, Train, Validation split:
-    Number_of_files = len(Sequence_List)
-    Val_files = int(Number_of_files * cfg.Val_ratio)
-    Test_files = int(Number_of_files * cfg.Test_ratio)
-    Train_files = Number_of_files - Val_files - Test_files
+    if random_split:
 
-    Train_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[:Train_files]]
-    Val_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files:Train_files + Val_files]]
-    Test_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files + Val_files:]]
+        # Test, Train, Validation split:
+        Number_of_files = len(Sequence_List)
+        Val_files = int(Number_of_files * cfg.Val_ratio)
+        Test_files = int(Number_of_files * cfg.Test_ratio)
+        Train_files = Number_of_files - Val_files - Test_files
+
+        Train_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[:Train_files]]
+        Val_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files:Train_files + Val_files]]
+        Test_sequence_paths = [cfg.Data_path + seq for seq in Sequence_List[Train_files + Val_files:]]
+
+    else:
+        Val_sequence_paths = cfg.Val_sequences
+        Test_sequence_paths = cfg.Test_sequences
+        Train_sequence_paths = [seq for seq in Sequence_List if seq not in Val_sequence_paths and seq not in Test_sequence_paths]
+
+        # Add the paths to the data path
+        Val_sequence_paths = [cfg.Data_path + seq for seq in Val_sequence_paths]
+        Test_sequence_paths = [cfg.Data_path + seq for seq in Test_sequence_paths]
+        Train_sequence_paths = [cfg.Data_path + seq for seq in Train_sequence_paths]
 
     # Radar_Range:
     if cfg.Radar_Range <= 25:

@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--patience', type=int, help='Patience for early stopping')
     parser.add_argument('--GT_mode', type=int, help='0: All Data, 1: Only obstacles in range')
     parser.add_argument('--num_epochs', type=int, help='Number of epochs')
+    parser.add_argument('--random_split', action='store_true',help='Frame number to visualize')
 
 
     # Visualize arguments
@@ -77,7 +78,7 @@ def main():
                 raise ValueError("Cannot update configuration values of a saved experiment. Please create a new experiment.")
 
         # Call the training function
-        train_model(cfg, args.config_path)
+        train_model(cfg, args.config_path, random_split=args.random_split)
 
     elif args.mode == 'visualize':
         visualize_data(args.sequence,args.no_camera,args.no_radar,args.no_GT,args.frame_number,args.fps,args.GT_point_cloud)
