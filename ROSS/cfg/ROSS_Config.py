@@ -4,8 +4,11 @@
 Val_ratio = 0.1
 Test_ratio = 0.1
 
+# Radar Range accuracy:
+Radar_Range_resolution = 50/256
+
 # Input and Output shape:
-GT_Output_shape = (32, 2)
+GT_Output_shape = (8, 2) # (32, 2) (16, 2) (8, 2)
 input_shape = (256, 256, 1)
 
 # List files in the ROSS_Dataset directory
@@ -29,6 +32,8 @@ if Radar_Range <= 25:
 
 # Merge t-1,t and t+1 Radar images:
 Merge_Radar_images = 1  # 0: No, 1: Yes
+
+Output_vertices = input_shape[0]
 
 # ROSS FOV
 FOV = 120  # 0: 120, 1: 90
@@ -60,4 +65,7 @@ Val_sequences=['20200805_002607_part48_2083_2282','20200706_202209_part31_962_12
 CACHE_FILE = './data/cache.json'
 
 config_Path='./ROSS/cfg/ROSS_Config.py'
+
+GT_set=1 # 0: Old GT, 1: New GT
+
 

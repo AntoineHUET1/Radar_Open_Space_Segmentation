@@ -5,6 +5,7 @@ class Metric_MAE(tf.keras.metrics.Metric):
         self.mae = self.add_weight(name='mae', initializer='zeros')
         self.count = self.add_weight(name='count', initializer='zeros')
         self.Radar_Range = cfg.Radar_Range
+        self.Output_vertices = cfg.Output_vertices
         self.GT_mode = cfg.GT_mode
         self.mae_fn = tf.keras.losses.MeanAbsoluteError()  # Instantiate the MAE loss function
 
@@ -24,7 +25,7 @@ class Metric_MAE(tf.keras.metrics.Metric):
             mae = self.mae_fn(masked_true_values, masked_pred_values)  # Compute MAE using the instance
 
         # Normalize the MAE by the Range
-        mae = mae*self.Radar_Range/50
+        mae = mae*self.Radar_Range/self.Output_vertices
 
         self.mae.assign_add(mae)
         self.count.assign_add(1)

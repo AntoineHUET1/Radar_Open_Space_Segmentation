@@ -33,6 +33,8 @@ def main():
     parser.add_argument('--frame_number', type=int, help='Frame number to visualize')
     parser.add_argument('--fps', type=int,default=10, help='GT Output shape')
     parser.add_argument('--GT_point_cloud',action='store_true', help='To visualize the GT point cloud instead of stixels')
+    parser.add_argument('--GT_Lines', action='store_true',help='To visualize the GT Version 2 as lines')
+    parser.add_argument('--Open_Space', action='store_true', help='To visualize the open space')
 
     # Test arguments
     parser.add_argument('--model_path', type=str, help='Path to the model file')
@@ -81,7 +83,7 @@ def main():
         train_model(cfg, args.config_path, random_split=args.random_split)
 
     elif args.mode == 'visualize':
-        visualize_data(args.sequence,args.no_camera,args.no_radar,args.no_GT,args.frame_number,args.fps,args.GT_point_cloud)
+        visualize_data(args.sequence,args.no_camera,args.no_radar,args.no_GT,args.frame_number,args.fps,args.GT_point_cloud,args.GT_Lines,args.Open_Space)
 
     elif args.mode == 'test':
         # if no model path then return error:

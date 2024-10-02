@@ -77,10 +77,10 @@ def Load_GT_Data(gt_path, cfg):
     # Remove all values above 25m:
     Have_GT[GT_Output_data > cfg.Radar_Range] = 0
     GT_Output_data[GT_Output_data > cfg.Radar_Range] = cfg.Radar_Range
-    GT_Output_data = GT_Output_data * 50 / cfg.Radar_Range
+    GT_Output_data = GT_Output_data * cfg.Output_vertices / cfg.Radar_Range
 
     #GT_Output_data = np.clip(GT_Output_data, 0.51, 48.49)
-    GT_Output_data = np.clip(GT_Output_data, 0, 49)
+    GT_Output_data = np.clip(GT_Output_data, 0, cfg.Output_vertices - 1)
     # Take closest integer value
     GT_Output_data = np.round(GT_Output_data)
     GT = np.stack((Have_GT, GT_Output_data), axis=1)
@@ -177,7 +177,10 @@ def prediction(Data,model,cfg):
 def load_sequence_data(sequence_path,cfg):
     # data path
     radar_data_path = os.path.join(sequence_path, 'Radar_Data')
-    gt_path = os.path.join(sequence_path, 'GT')
+    if cfg.GT_set == 0:
+        gt_path = os.path.join(sequence_path, 'GT')
+    else:
+        gt_path = os.path.join(sequence_path, 'GT_2')
 
     # sort the files
     radar_data_files = natsorted(os.listdir(radar_data_path))
@@ -236,16 +239,16 @@ def create_dataloader(sequence_paths,cfg):
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
 
     # Convert list of paths to a tuple
-    sequence_paths_tuple = tuple(sequence_paths)
+    #sequence_paths_tuple = tuple(sequence_paths)
 
-    cache = load_cache(cfg.CACHE_FILE)
+    #cache = load_cache(cfg.CACHE_FILE)
 
-    if json.dumps(sequence_paths_tuple) in cache:
-        dataloader_length = cache[json.dumps(sequence_paths_tuple)]
-    else:
-        dataloader_length = count_batches(dataset)
-        cache[json.dumps(sequence_paths_tuple)] = dataloader_length
-        save_cache(cache, cfg.CACHE_FILE)
+    #if json.dumps(sequence_paths_tuple) in cache:
+        #dataloader_length = cache[json.dumps(sequence_paths_tuple)]
+    #else:
+    dataloader_length = count_batches(dataset)
+    #cache[json.dumps(sequence_paths_tuple)] = dataloader_length
+    #save_cache(cache, cfg.CACHE_FILE)
 
     return dataset, dataloader_length
 
