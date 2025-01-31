@@ -4,6 +4,6 @@
 /Results/
 
 # Ignore Test Files
-Test.py
+Temporary/Test.py
 # Ignore Test Files
 TestTF.py

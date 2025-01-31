@@ -176,6 +176,14 @@ CLASSES = ['pedestrian', 'deformed pedestrian', 'bicycle', 'car', 'van', 'bus', 
            'ground', 'crosstalk', 'noise', 'others', 'animal', 'unpainted', 'cyclist', 'motorcyclist',
            'unclassified vehicle', 'obstacle', 'trailer', 'barrier', 'bicycle rack', 'construction vehicle','Unknown']
 
+CLASSES = ['pedestrian', 'deformed pedestrian', 'bicycle', 'car', 'van', 'bus', 'truck',
+           'motorcycle', 'animal', 'cyclist', 'motorcyclist','unclassified vehicle', 'trailer', 'construction vehicle']
+
+           'obstacle','barrier', 'bicycle rack','Unknown','stop sign', 'traffic light', 'traffic sign', 'traffic cone', 'fire hydrant',
+           'guard rail', 'pole', 'pole group', 'road', 'sidewalk', 'wall', 'building', 'vegetation',
+           'terrain',
+           'ground', 'crosstalk', 'noise', 'others', 'animal', 'unpainted',]
+
 COLOR = [(176, 242, 182), (9, 82, 40), (255, 127, 0), (119, 181, 254), (15, 5, 107), (206, 206, 206),
          (91, 60, 17), (88, 41, 0), (217, 33, 33), (255, 215, 0), (48, 25, 212), (230, 110, 60),
          (240, 0, 32), (140, 120, 130), (80, 120, 130), (80, 120, 180), (255, 0, 0), (30, 70, 30),

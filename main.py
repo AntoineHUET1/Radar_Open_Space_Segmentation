@@ -27,14 +27,14 @@ def main():
 
 
     # Visualize arguments
-    parser.add_argument('--no_camera', action='store_true',help='Frame number to visualize')
-    parser.add_argument('--no_radar', action='store_true',help='Visualize radar files')
-    parser.add_argument('--no_GT', action='store_true',help='Visualize GT files')
     parser.add_argument('--frame_number', type=int, help='Frame number to visualize')
     parser.add_argument('--fps', type=int,default=10, help='GT Output shape')
     parser.add_argument('--GT_point_cloud',action='store_true', help='To visualize the GT point cloud instead of stixels')
-    parser.add_argument('--GT_Lines', action='store_true',help='To visualize the GT Version 2 as lines')
-    parser.add_argument('--Open_Space', action='store_true', help='To visualize the open space')
+    parser.add_argument('--mode_open_space', type=int, default=3, help='Open Space Mode: 0: Do_Open_space, 1: Do_DBSCAN')
+    parser.add_argument('--GT_version', type=int, default=1,help='GT_Data: 0: First version, 1: Improved version')
+    parser.add_argument('--Data_path',type=str,default='data/ROSS_Dataset',help='Path to dataset')
+    parser.add_argument('--model_pred', action='store_true', help='Add model prediction to the visualization')
+
 
     # Test arguments
     parser.add_argument('--model_path', type=str, help='Path to the model file')
@@ -83,16 +83,19 @@ def main():
         train_model(cfg, args.config_path, random_split=args.random_split)
 
     elif args.mode == 'visualize':
-        visualize_data(args.sequence,args.no_camera,args.no_radar,args.no_GT,args.frame_number,args.fps,args.GT_point_cloud,args.GT_Lines,args.Open_Space)
+        if args.model_pred:
+            if args.config_path is None:
+                raise ValueError('Please provide a model path')
+        visualize_data(args)
 
     elif args.mode == 'test':
         # if no model path then return error:
         if args.config_path is None:
-            raise ValueError('Please provide a model path')
+            raise ValueError('Please provide a config_path')
 
         if args.label is None and args.sequence is None:
             raise ValueError('Please provide a sequence name or a label')
-        Test(args.config_path,label=args.label,show_graph=args.show_graph)
+        Test(args)
 
     elif args.mode == 'inference':
         # if no model path then return error:

@@ -103,7 +103,7 @@ def convert_difficulty(list_Angle_Difficulty, cfg):
     return list_Angle_Difficulty
 
 
-def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=False):
+def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=False,Generate_pred=False):
 
     step = cfg.FOV / cfg.GT_Output_shape[0]
 
@@ -153,6 +153,9 @@ def genrerat_Graph(checkpoint_path, Data, cfg, label, Save_fig=False, Show_fig=F
 
         # ==================== Inference ====================
         Pred_Full, GT_Full, Pred_val_Full = prediction(Data,model, cfg)
+
+        if Generate_pred:
+            return Pred_Full, GT_Full, Pred_val_Full
 
         # Stack the results into arrays
         Pred_Full = np.stack(Pred_Full, axis=0)

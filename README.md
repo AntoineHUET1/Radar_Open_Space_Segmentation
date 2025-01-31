@@ -44,7 +44,7 @@ Leddar PixSet Dataset is a publicly available dataset containing approximately 2
     ```bash
    cd $PROJECTROOT
     mkdir -p data
-    ln -s $PIXETDATASET data/Pixet_Dataset
+    ln -s $PIXETDATASET data/ROSS_Dataset
     ```
 3. Run the following script to generate ground truth data:
     ```bash

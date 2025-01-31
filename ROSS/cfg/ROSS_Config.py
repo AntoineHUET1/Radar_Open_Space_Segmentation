@@ -8,11 +8,14 @@ Test_ratio = 0.1
 Radar_Range_resolution = 50/256
 
 # Input and Output shape:
-GT_Output_shape = (8, 2) # (32, 2) (16, 2) (8, 2)
+GT_Output_shape = (32, 2) # (32, 2) (16, 2) (8, 2)
 input_shape = (256, 256, 1)
 
 # List files in the ROSS_Dataset directory
 Data_path = './data/ROSS_Dataset/'
+
+# 20200706_202209_part31_2636_2746,20200611_172353_part5_150_250,20200730_003948_part44_6875_7500
+# 20200706_143808_part26_3042_3420,20200708_121622_part33_5534_5833, 20200610_185206_part1_9850_10050,20200616_151155_part9_750_900
 
 # Remove bad sequences:
 Remove_bad_sequences = False

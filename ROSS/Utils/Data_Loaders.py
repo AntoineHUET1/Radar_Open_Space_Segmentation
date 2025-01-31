@@ -10,6 +10,7 @@ import json
 from scipy.interpolate import RegularGridInterpolator
 from scipy.interpolate import LinearNDInterpolator
 
+
 def Load_Radar_Data(radar_path, cfg,Mode_Visualisation=False):
     if cfg.Merge_Radar_images == 1 and not Mode_Visualisation:
         data_arrays = []
@@ -87,12 +88,10 @@ def Load_GT_Data(gt_path, cfg):
     return GT
 
 def adjust_radar_data_based_on_range_and_gt(radar_data, gt_data, cfg):
+
     if cfg.Radar_Range not in [25, 50]:
 
-        if cfg.Radar_Range > 25:
-            Factor = 50
-        else:
-            Factor = 25
+        Factor=cfg.Output_vertices
 
         # Original dimensions
         real_x_dim = int(cfg.Radar_Range * radar_data[0].shape[0] / Factor)
